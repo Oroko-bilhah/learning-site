@@ -1,6 +1,18 @@
 import { Link, useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { readTeacherLessons } from '../teacherContent'
 import '../App.css'
+
+function readCompletedLessonSlugs() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem('elimuNestCompletedLessons') || '[]'
+    )
+    return new Set(Array.isArray(saved) ? saved : [])
+  } catch {
+    return new Set()
+  }
+}
 
 const subjectContent = {
   mathematics: {
@@ -160,6 +172,20 @@ const subjectContent = {
 export default function SubjectDetail() {
   const { gradeId, subjectName } = useParams()
   const [expandedTopic, setExpandedTopic] = useState(1)
+  const [teacherLessons, setTeacherLessons] = useState(readTeacherLessons)
+  const [completedLessons, setCompletedLessons] = useState(
+    readCompletedLessonSlugs
+  )
+
+  useEffect(() => {
+    const refreshLessons = () => {
+      setTeacherLessons(readTeacherLessons())
+      setCompletedLessons(readCompletedLessonSlugs())
+    }
+
+    window.addEventListener('storage', refreshLessons)
+    return () => window.removeEventListener('storage', refreshLessons)
+  }, [])
 
   const subject = subjectContent[subjectName?.toLowerCase()]
   const gradeName =
@@ -187,6 +213,73 @@ export default function SubjectDetail() {
     )
   }
 
+  const publishedLessons = teacherLessons.filter(
+    (lesson) =>
+      lesson.status === 'published' &&
+      lesson.gradeId === gradeId &&
+      lesson.subject.toLowerCase() === subject.name.toLowerCase()
+  )
+
+  const normalizedTopic = (topic) => topic.trim().toLowerCase()
+  const visibleTopics = subject.topics.map((topic) => {
+    const matchingLessons = publishedLessons.filter(
+      (lesson) => normalizedTopic(lesson.topic) === normalizedTopic(topic.title)
+    )
+
+    return {
+      ...topic,
+      lessons: [
+        ...topic.lessons.map((title) => ({
+          title,
+          slug: title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, ''),
+          available: true,
+        })),
+        ...matchingLessons.map((lesson) => ({
+          title: lesson.title,
+          slug: lesson.id,
+          available: true,
+        })),
+      ],
+    }
+  })
+
+  const existingTopicNames = new Set(
+    subject.topics.map((topic) => normalizedTopic(topic.title))
+  )
+  const additionalTopics = [
+    ...new Set(
+      publishedLessons
+        .map((lesson) => lesson.topic.trim())
+        .filter((topic) => !existingTopicNames.has(normalizedTopic(topic)))
+    ),
+  ].map((topic, index) => ({
+    id: `teacher-topic-${index}`,
+    title: topic,
+    description: 'Teacher-created learning material.',
+    lessons: publishedLessons
+      .filter((lesson) => normalizedTopic(lesson.topic) === normalizedTopic(topic))
+      .map((lesson) => ({
+        title: lesson.title,
+        slug: lesson.id,
+        available: true,
+      })),
+  }))
+  const topicsToShow = [...visibleTopics, ...additionalTopics]
+  const availableLessonSlugs = topicsToShow.flatMap((topic) =>
+    topic.lessons
+      .filter((lesson) => lesson.available)
+      .map((lesson) => lesson.slug)
+  )
+  const completedCount = availableLessonSlugs.filter((slug) =>
+    completedLessons.has(slug)
+  ).length
+  const completionPercent = availableLessonSlugs.length
+    ? Math.round((completedCount / availableLessonSlugs.length) * 100)
+    : 0
+
   return (
     <main className="subject-detail-page">
       <nav className="detail-breadcrumb" aria-label="Breadcrumb">
@@ -205,14 +298,29 @@ export default function SubjectDetail() {
         <p>{subject.description}</p>
 
         <div className="subject-detail-meta">
-          <span>{subject.topics.length} topics</span>
-          <span>
-            {subject.topics.reduce(
-              (total, topic) => total + topic.lessons.length,
-              0
-            )}{' '}
-            lessons
-          </span>
+          <span>{topicsToShow.length} topics</span>
+          <span>{availableLessonSlugs.length} lessons ready</span>
+        </div>
+        <div className="subject-learning-progress">
+          <div className="subject-learning-progress-label">
+            <span>Your progress</span>
+            <strong>
+              {completedCount} of {availableLessonSlugs.length} ready lessons
+            </strong>
+          </div>
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-label={`${subject.name} learning progress`}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={completionPercent}
+          >
+            <div
+              className="progress-fill"
+              style={{ width: `${completionPercent}%` }}
+            />
+          </div>
         </div>
       </section>
 
@@ -224,7 +332,7 @@ export default function SubjectDetail() {
         </div>
 
         <div className="topic-list">
-          {subject.topics.map((topic, index) => {
+          {topicsToShow.map((topic, index) => {
             const isExpanded = expandedTopic === topic.id
 
             return (
@@ -258,21 +366,38 @@ export default function SubjectDetail() {
                 {isExpanded && (
                   <div className="topic-lessons">
                     {topic.lessons.map((lesson, lessonIndex) => (
-                      <div className="topic-lesson" key={lesson}>
+                      <div className="topic-lesson" key={lesson.slug}>
                         <span className="lesson-number">
                           {String(lessonIndex + 1).padStart(2, '0')}
                         </span>
 
-<Link
-  className="topic-lesson-link"
-  to={`/subjects/${gradeId}/${subjectName}/lessons/${lesson
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')}`}
->
-  <span>{lesson}</span>
-  <span className="lesson-status">Open lesson →</span>
-</Link>
+                        {lesson.available ? (
+                          <Link
+                            className={`topic-lesson-link ${
+                              completedLessons.has(lesson.slug)
+                                ? 'completed'
+                                : ''
+                            }`}
+                            aria-label={`${lesson.title}${
+                              completedLessons.has(lesson.slug)
+                                ? ', completed'
+                                : ', ready to start'
+                            }`}
+                            to={`/subjects/${gradeId}/${subjectName}/lessons/${lesson.slug}`}
+                          >
+                            <span>{lesson.title}</span>
+                            <span className="lesson-status">
+                              {completedLessons.has(lesson.slug)
+                                ? 'Completed'
+                                : 'Start lesson'}
+                            </span>
+                          </Link>
+                        ) : (
+                          <div className="topic-lesson-link unavailable">
+                            <span>{lesson.title}</span>
+                            <span className="lesson-status">Coming soon</span>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

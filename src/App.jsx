@@ -5,6 +5,7 @@ import Lesson from './pages/Lesson'
 import Bookmarks from './pages/Bookmarks'
 import Navbar from './pages/Navbar'
 import Dashboard from './pages/Dashboard'
+import Teacher from './pages/Teacher'
 import './App.css'
 
 const subjects = [
@@ -34,15 +35,73 @@ const subjects = [
   },
 ]
 
+const homeFeatures = [
+  {
+    title: 'Guided learning',
+    description: 'Clear explanations and examples for every topic.',
+    icon: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M5 21a7 7 0 0 1 14 0M19 8h3M20.5 6.5v3" />
+      </>
+    ),
+  },
+  {
+    title: 'Learn at your pace',
+    description: 'Study whenever you have time and pick up where you left off.',
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+  },
+  {
+    title: 'Useful resources',
+    description: 'Explore lessons and practice questions in one place.',
+    icon: (
+      <>
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
+        <path d="M4 5.5v16M8 7h8M8 11h8M8 15h5" />
+      </>
+    ),
+  },
+  {
+    title: 'Track your progress',
+    description: 'See what you have completed and what to study next.',
+    icon: (
+      <>
+        <path d="M3 3v18h18" />
+        <path d="m19 9-5 5-4-4-5 5" />
+      </>
+    ),
+  },
+]
+
+function FeatureIcon({ children }) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </svg>
+  )
+}
+
 function HomePage() {
   return (
     <div className="app">
 <main>
         <section className="hero" id="home">
           <div className="hero-content">
-            <span className="eyebrow">
-              YOUR LEARNING JOURNEY STARTS HERE
-            </span>
+            <span className="eyebrow">LEARN FROM ANYWHERE</span>
 
             <h1>
               Learn better.
@@ -51,9 +110,8 @@ function HomePage() {
             </h1>
 
             <p className="hero-description">
-              Your space to learn, practise, and grow.
-              Explore lessons, strengthen your skills, and
-              prepare for your next academic milestone.
+              Explore clear lessons, practise what you learn, and build
+              confidence one step at a time.
             </p>
 
             <div className="hero-actions">
@@ -67,50 +125,47 @@ function HomePage() {
             </div>
 
             <div className="hero-note">
-              <span className="note-check">OK</span>
-              Learn at your own pace, whenever you're ready.
+              <span className="note-check">01</span>
+              Flexible learning for your next academic milestone.
             </div>
           </div>
 
           <div className="hero-visual">
-            <div className="visual-orbit orbit-one" />
-            <div className="visual-orbit orbit-two" />
-
-            <div className="learning-card">
-              <div className="card-top">
-                <div>
-                  <span className="card-label">YOUR NEXT CHAPTER</span>
-                  <h3>Ready to learn?</h3>
-                </div>
-                <span className="book-icon">Learn</span>
-              </div>
-
-              <div className="learning-illustration">
-                <div className="book book-back" />
-                <div className="book book-front">
-                  <span>EN</span>
-                </div>
-                <div className="floating-star star-one">Study</div>
-                <div className="floating-star star-two">Grow</div>
-              </div>
-
-              <div className="card-bottom">
-                <div>
-                  <strong>One lesson at a time.</strong>
-                  <p>Small steps lead to big progress.</p>
-                </div>
-                <span className="arrow-circle">Go</span>
+            <div className="hero-photo-frame">
+              <img
+                className="hero-photo"
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=85"
+                alt="Students collaborating on their studies"
+                fetchPriority="high"
+              />
+              <div className="hero-photo-caption">
+                <strong>Your next chapter starts here.</strong>
+                <span>Build knowledge, confidence, and new possibilities.</span>
               </div>
             </div>
 
             <div className="floating-badge badge-top">
-              <span>Tip</span> Learn something new
+              <span>01</span> Learn something new
             </div>
 
             <div className="floating-badge badge-bottom">
-              <span>Ready</span> Progress starts here
+              <span>02</span> Progress starts here
             </div>
           </div>
+        </section>
+
+        <section className="home-features" aria-label="Learning benefits">
+          {homeFeatures.map((feature) => (
+            <article className="home-feature-card" key={feature.title}>
+              <div className="home-feature-icon">
+                <FeatureIcon>{feature.icon}</FeatureIcon>
+              </div>
+              <div>
+                <h2>{feature.title}</h2>
+                <p>{feature.description}</p>
+              </div>
+            </article>
+          ))}
         </section>
 
         <section className="curriculum-section">
@@ -261,6 +316,7 @@ function App() {
         />
         <Route path="/bookmarks" element={<Bookmarks />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/teacher" element={<Teacher />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { readTeacherLessons } from '../teacherContent'
+import { createCurriculumLesson } from '../curriculumLesson'
 import '../App.css'
 
 function LessonIcon({ name, size = 16 }) {
@@ -110,6 +112,41 @@ const lessons = {
         explanation:
           'Decreased by 3 means subtract 3 from the number.',
       },
+      {
+        question: 'In the expression 5a + 2, which number is the coefficient?',
+        options: ['5', 'a', '2', '5a'],
+        answer: '5',
+        explanation:
+          'The coefficient is the number multiplying the variable. Here, 5 multiplies a.',
+      },
+      {
+        question: 'How many terms are in 2x + 4?',
+        options: ['1', '2', '3', '4'],
+        answer: '2',
+        explanation:
+          'The terms are separated by plus or minus signs: 2x and 4.',
+      },
+      {
+        question: 'Which expression means 6 more than a number n?',
+        options: ['6n', 'n - 6', 'n + 6', 'n ÷ 6'],
+        answer: 'n + 6',
+        explanation:
+          'More than means add, so add 6 to the number n.',
+      },
+      {
+        question: 'If x = 3, what is the value of 2x + 1?',
+        options: ['5', '6', '7', '8'],
+        answer: '7',
+        explanation:
+          'Replace x with 3: 2 × 3 + 1 = 6 + 1 = 7.',
+      },
+      {
+        question: 'Which expression means a number m divided by 4?',
+        options: ['m + 4', '4m', 'm - 4', 'm ÷ 4'],
+        answer: 'm ÷ 4',
+        explanation:
+          'Divided by 4 is written as m ÷ 4 (or m/4).',
+      },
     ],
   },
 }
@@ -163,7 +200,38 @@ export default function Lesson() {
     )
   }, [completed, lessonSlug])
 
-  const lesson = lessons[lessonSlug]
+  const authoredLesson = readTeacherLessons().find(
+    (item) => item.id === lessonSlug && item.status === 'published'
+  )
+  const savedLesson = authoredLesson
+    ? {
+        ...authoredLesson,
+        duration: `${authoredLesson.duration} minutes`,
+        sections: authoredLesson.contentSections?.length
+          ? authoredLesson.contentSections.map((section) => ({
+              heading: section.topic,
+              paragraphs: section.content
+                .split(/\n\s*\n/)
+                .map((paragraph) => paragraph.trim())
+                .filter(Boolean),
+            }))
+          : [
+              {
+                heading: authoredLesson.topic,
+                paragraphs: (authoredLesson.content || '')
+                  .split(/\n\s*\n/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter(Boolean),
+              },
+            ],
+      }
+    : null
+  const curriculumLesson = createCurriculumLesson(
+    gradeId,
+    subjectName,
+    lessonSlug
+  )
+  const lesson = lessons[lessonSlug] || savedLesson || curriculumLesson
 
   if (!lesson) {
     return (
@@ -189,6 +257,7 @@ export default function Lesson() {
   const correctAnswers = lesson.questions.filter(
     (question, index) => answers[index] === question.answer
   ).length
+  const answeredCount = Object.keys(answers).length
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -216,6 +285,14 @@ export default function Lesson() {
 
       <div className="lesson-layout">
         <article className="lesson-content">
+          <nav className="lesson-roadmap" aria-label="Lesson steps">
+            <a href="#lesson-goals">1. Learn</a>
+            <span aria-hidden="true">/</span>
+            <a href="#lesson-quiz">2. Practise</a>
+            <span aria-hidden="true">/</span>
+            <a href="#lesson-review">3. Review</a>
+          </nav>
+
           <header className="lesson-header">
             <span className="eyebrow">
               {lesson.grade} · {lesson.subject}
@@ -230,7 +307,7 @@ export default function Lesson() {
                 {lesson.duration}
               </span>
               <span>
-                {lesson.objectives.length} learning objectives
+                {lesson.questions.length} practice questions
               </span>
             </div>
 
@@ -260,7 +337,7 @@ export default function Lesson() {
             </div>
           </header>
 
-          <section className="lesson-objectives">
+          <section className="lesson-objectives" id="lesson-goals">
             <h2>What you'll learn</h2>
             <ul>
               {lesson.objectives.map((objective) => (
@@ -277,6 +354,9 @@ export default function Lesson() {
           {lesson.sections.map((section) => (
             <section
               className="lesson-section"
+              id={`lesson-section-${section.heading
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')}`}
               key={section.heading}
             >
               <h2>{section.heading}</h2>
@@ -286,30 +366,58 @@ export default function Lesson() {
             </section>
           ))}
 
-          <section className="worked-example">
-            <span className="eyebrow">WORKED EXAMPLE</span>
-            <h2>{lesson.example.question}</h2>
+          {lesson.example && (
+            <section className="worked-example" id="lesson-example">
+              <span className="eyebrow">WORKED EXAMPLE</span>
+              <h2>{lesson.example.question}</h2>
 
-            <ol>
-              {lesson.example.steps.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
+              <ol>
+                {lesson.example.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
 
-            <div className="example-answer">
-              <strong>Answer:</strong> {lesson.example.answer}
-            </div>
-          </section>
+              <div className="example-answer">
+                <strong>Answer:</strong> {lesson.example.answer}
+              </div>
+            </section>
+          )}
 
-          <section className="lesson-quiz">
+          <section className="lesson-quiz" id="lesson-quiz">
             <div className="lesson-quiz-heading">
               <span className="eyebrow">
                 CHECK YOUR UNDERSTANDING
               </span>
               <h2>Quick practice</h2>
               <p>
-                Answer these questions to review what you've learned.
+                Take your time. Choose an answer for each question, then check
+                your score and read the explanations.
               </p>
+              <div className="quiz-progress">
+                <div className="quiz-progress-label">
+                  <span>Questions answered</span>
+                  <strong>
+                    {answeredCount} of {lesson.questions.length}
+                  </strong>
+                </div>
+                <div
+                  className="progress-track"
+                  role="progressbar"
+                  aria-label="Quiz questions answered"
+                  aria-valuemin="0"
+                  aria-valuemax={lesson.questions.length}
+                  aria-valuenow={answeredCount}
+                >
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${
+                        (answeredCount / lesson.questions.length) * 100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -320,7 +428,7 @@ export default function Lesson() {
                 return (
                   <fieldset
                     className="practice-question"
-                    key={question.question}
+                    key={`${index}-${question.question}`}
                   >
                     <legend>
                       {index + 1}. {question.question}
@@ -376,14 +484,17 @@ export default function Lesson() {
                 </button>
               ) : (
                 <div className="quiz-results">
+                  <span className="eyebrow">QUIZ REVIEW</span>
                   <h3>
                     Your score: {correctAnswers} /{' '}
                     {lesson.questions.length}
                   </h3>
                   <p>
                     {correctAnswers === lesson.questions.length
-                      ? 'Excellent work! You answered every question correctly.'
-                      : 'Review the explanations, then try again.'}
+                      ? 'Excellent work. You got every question right.'
+                      : correctAnswers >= lesson.questions.length / 2
+                        ? 'Good progress. Review any missed answers, then try again.'
+                        : 'Every attempt helps. Read the explanations and try again.'}
                   </p>
                   <button
                     className="secondary-button"
@@ -395,6 +506,26 @@ export default function Lesson() {
                 </div>
               )}
             </form>
+          </section>
+
+          <section className="lesson-finish" id="lesson-review">
+            <div>
+              <span className="eyebrow">FINISH THIS LESSON</span>
+              <h2>{completed ? 'Lesson complete' : 'Ready for the next step?'}</h2>
+              <p>
+                {completed
+                  ? 'Your progress is saved. Keep your learning streak going.'
+                  : 'Mark this lesson complete to track your progress.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setCompleted(true)}
+              disabled={completed}
+            >
+              {completed ? 'Completed' : 'Mark complete'}
+            </button>
           </section>
 
           <div className="lesson-footer-navigation">
@@ -409,6 +540,28 @@ export default function Lesson() {
         </article>
 
         <aside className="lesson-sidebar">
+          <nav
+            className="lesson-sidebar-card lesson-outline"
+            aria-label="On this lesson"
+          >
+            <span className="eyebrow">ON THIS LESSON</span>
+            <h3>Lesson guide</h3>
+            <a href="#lesson-goals">What you'll learn</a>
+            {lesson.sections.map((section) => (
+              <a
+                href={`#lesson-section-${section.heading
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, '-')}`}
+                key={section.heading}
+              >
+                {section.heading}
+              </a>
+            ))}
+            {lesson.example && <a href="#lesson-example">Worked example</a>}
+            <a href="#lesson-quiz">Practice quiz</a>
+            <a href="#lesson-review">Finish lesson</a>
+          </nav>
+
           <div className="lesson-sidebar-card">
             <span className="eyebrow">STUDY TIP</span>
             <h3>Learn actively</h3>

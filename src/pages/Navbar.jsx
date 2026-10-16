@@ -22,6 +22,10 @@ function Navbar() {
           Dashboard
         </NavLink>
 
+        <NavLink to="/teacher">
+          Teacher
+        </NavLink>
+
         <NavLink to="/bookmarks">
           Saved Lessons 
         </NavLink>
