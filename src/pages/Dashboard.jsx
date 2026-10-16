@@ -1,8 +1,9 @@
+
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import '../App.css'
 
-const dashboardIcons = {
+const icons = {
   book: (
     <>
       <path d="M12 7v14" />
@@ -62,7 +63,7 @@ function DashboardIcon({ name, size = 20 }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {dashboardIcons[name]}
+      {icons[name]}
     </svg>
   )
 }
@@ -88,34 +89,52 @@ const subjects = [
   },
 ]
 
+const totalLessons = 30
+
+function readSavedList(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(saved) ? saved : []
+  } catch {
+    return []
+  }
+}
+
 function Dashboard() {
-  const completedLessons = 12
-  const totalLessons = 30
-  const overallProgress = Math.round(
-    (completedLessons / totalLessons) * 100
+  const [completedLessons, setCompletedLessons] = useState(
+    () => readSavedList('elimuNestCompletedLessons').length
   )
 
-const [bookmarkCount, setBookmarkCount] = useState(() => {
-  return JSON.parse(
-    localStorage.getItem('elimuNestBookmarks') || '[]'
-  ).length
-})
+  const [bookmarkCount, setBookmarkCount] = useState(
+    () => readSavedList('elimuNestBookmarks').length
+  )
 
-useEffect(() => {
-  const updateBookmarks = () => {
-    const saved = JSON.parse(
-      localStorage.getItem('elimuNestBookmarks') || '[]'
-    )
+  useEffect(() => {
+    function updateStats() {
+      setCompletedLessons(
+        readSavedList('elimuNestCompletedLessons').length
+      )
 
-    setBookmarkCount(saved.length)
-  }
+      setBookmarkCount(
+        readSavedList('elimuNestBookmarks').length
+      )
+    }
 
-  window.addEventListener('focus', updateBookmarks)
+    // Refresh when the student returns to the Dashboard.
+    updateStats()
 
-  return () => {
-    window.removeEventListener('focus', updateBookmarks)
-  }
-}, [])
+    // Listen for changes made in another browser tab.
+    window.addEventListener('storage', updateStats)
+
+    return () => {
+      window.removeEventListener('storage', updateStats)
+    }
+  }, [])
+
+  const overallProgress = Math.min(
+    100,
+    Math.round((completedLessons / totalLessons) * 100)
+  )
 
   return (
     <main className="dashboard-page">
@@ -153,6 +172,9 @@ useEffect(() => {
               style={{ width: `${overallProgress}%` }}
             />
           </div>
+          <span>
+            {completedLessons} of {totalLessons} learning lessons completed
+          </span>
         </article>
 
         <article className="dashboard-stat-card">
@@ -181,7 +203,10 @@ useEffect(() => {
 
         <div className="dashboard-subject-grid">
           {subjects.map((subject) => (
-            <article className="dashboard-subject-card" key={subject.name}>
+            <article
+              className="dashboard-subject-card"
+              key={subject.name}
+            >
               <div className={`dashboard-subject-icon ${subject.color}`}>
                 <DashboardIcon
                   name={subject.name.toLowerCase()}
@@ -193,7 +218,7 @@ useEffect(() => {
               <h3>{subject.name}</h3>
 
               <div className="dashboard-progress-label">
-                <span>Progress</span>
+                <span>Sample progress</span>
                 <strong>{subject.progress}%</strong>
               </div>
 
