@@ -1,7 +1,8 @@
 
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { readTeacherClasses, readTeacherAssessments } from '../teacherContent'
+import { listAssessments, listClassSchedules } from '../backend'
+import { scopedStorageKey } from '../auth'
 import '../App.css'
 
 const icons = {
@@ -94,7 +95,7 @@ const totalLessons = 30
 
 function readSavedList(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(key) || '[]')
+    const saved = JSON.parse(localStorage.getItem(scopedStorageKey(key)) || '[]')
     return Array.isArray(saved) ? saved : []
   } catch {
     return []
@@ -109,11 +110,11 @@ function Dashboard() {
   const [bookmarkCount, setBookmarkCount] = useState(
     () => readSavedList('elimuNestBookmarks').length
   )
-  const [classes, setClasses] = useState(readTeacherClasses)
-  const [assessments, setAssessments] = useState(readTeacherAssessments)
+  const [classes, setClasses] = useState([])
+  const [assessments, setAssessments] = useState([])
 
   useEffect(() => {
-    function updateStats() {
+    async function updateStats() {
       setCompletedLessons(
         readSavedList('elimuNestCompletedLessons').length
       )
@@ -121,8 +122,14 @@ function Dashboard() {
       setBookmarkCount(
         readSavedList('elimuNestBookmarks').length
       )
-      setClasses(readTeacherClasses())
-      setAssessments(readTeacherAssessments())
+      try {
+        const [savedClasses, savedAssessments] = await Promise.all([listClassSchedules(), listAssessments()])
+        setClasses(savedClasses)
+        setAssessments(savedAssessments)
+      } catch {
+        setClasses([])
+        setAssessments([])
+      }
     }
 
     // Refresh when the student returns to the Dashboard.
@@ -130,9 +137,11 @@ function Dashboard() {
 
     // Listen for changes made in another browser tab.
     window.addEventListener('storage', updateStats)
+    window.addEventListener('elimu-content-change', updateStats)
 
     return () => {
       window.removeEventListener('storage', updateStats)
+      window.removeEventListener('elimu-content-change', updateStats)
     }
   }, [])
 

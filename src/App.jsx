@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import AuthPage from './pages/AuthPage'
+import { AuthProvider } from './AuthContext'
+import ProtectedRoute from './ProtectedRoute'
 import Subjects from './pages/Subjects'
 import SubjectDetail from './pages/SubjectDetail'
 import Lesson from './pages/Lesson'
@@ -301,6 +304,7 @@ function HomePage() {
 function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <Navbar />
 
       <Routes>
@@ -314,10 +318,13 @@ function App() {
           path="/subjects/:gradeId/:subjectName/lessons/:lessonSlug"
           element={<Lesson />}
         />
-        <Route path="/bookmarks" element={<Bookmarks />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/teacher" element={<Teacher />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
+        <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/teacher" element={<ProtectedRoute role="teacher"><Teacher /></ProtectedRoute>} />
       </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

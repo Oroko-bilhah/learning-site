@@ -151,7 +151,6 @@ const byGrade = {
 }
 
 function genericTopics(subjectName, gradeNumber) {
-  const isUpperPrimary = gradeNumber <= 6
   const subject = subjectName.replace(/-/g, ' ')
   const set = /agriculture/.test(subject)
     ? [

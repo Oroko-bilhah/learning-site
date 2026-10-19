@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { scopedStorageKey } from '../auth'
 import '../App.css'
 
 function Bookmarks () {
-    const [bookmarks, setBookmarks] = useState([])
-    useEffect(()=> {
-        const saved = JSON.parse(
-            localStorage.getItem('elimuNestBookmarks') || '[]'
-        )
-        setBookmarks(saved)
-    }, [])
+    const [bookmarks, setBookmarks] = useState(() => {
+        try {
+          const saved = JSON.parse(localStorage.getItem(scopedStorageKey('elimuNestBookmarks')) || '[]')
+          return Array.isArray(saved) ? saved : []
+        } catch {
+          return []
+        }
+    })
     return (
         <main className="bookmarks-page">
             <Link to="/subjects" className="back-link">
@@ -61,7 +63,7 @@ function Bookmarks () {
                   )
 
                   localStorage.setItem(
-                    'elimuNestBookmarks',
+                    scopedStorageKey('elimuNestBookmarks'),
                     JSON.stringify(updated)
                   )
 

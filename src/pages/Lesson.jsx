@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { readTeacherLessons } from '../teacherContent'
+import { listPublishedLessons } from '../backend'
+import { scopedStorageKey } from '../auth'
 import {
   createCurriculumLesson,
   getCurriculumLessonSequence,
@@ -397,7 +398,7 @@ function CountPicture({ visual }) {
 
 function readSavedList(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(key) || '[]')
+    const saved = JSON.parse(localStorage.getItem(scopedStorageKey(key)) || '[]')
     return Array.isArray(saved) ? saved : []
   } catch {
     return []
@@ -417,6 +418,17 @@ function LessonContent() {
   const [completed, setCompleted] = useState(() =>
     readSavedList('elimuNestCompletedLessons').includes(lessonSlug)
   )
+  const [publishedTeacherLessons, setPublishedTeacherLessons] = useState([])
+
+  useEffect(() => {
+    let active = true
+    listPublishedLessons(gradeId).then((items) => {
+      if (active) setPublishedTeacherLessons(items)
+    }).catch(() => {
+      if (active) setPublishedTeacherLessons([])
+    })
+    return () => { active = false }
+  }, [gradeId])
 
   useEffect(() => {
     const saved = readSavedList('elimuNestBookmarks')
@@ -426,7 +438,7 @@ function LessonContent() {
       : saved.filter((slug) => slug !== lessonSlug)
 
     localStorage.setItem(
-      'elimuNestBookmarks',
+      scopedStorageKey('elimuNestBookmarks'),
       JSON.stringify(updated)
     )
   }, [bookmarked, lessonSlug])
@@ -439,12 +451,12 @@ function LessonContent() {
       : saved.filter((slug) => slug !== lessonSlug)
 
     localStorage.setItem(
-      'elimuNestCompletedLessons',
+      scopedStorageKey('elimuNestCompletedLessons'),
       JSON.stringify(updated)
     )
   }, [completed, lessonSlug])
 
-  const authoredLesson = readTeacherLessons().find(
+  const authoredLesson = publishedTeacherLessons.find(
     (item) => item.id === lessonSlug && item.status === 'published'
   )
   const savedLesson = authoredLesson
@@ -506,7 +518,7 @@ function LessonContent() {
   const subjectKey = decodeURIComponent(subjectName)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '')
-  const authoredLessonSequence = readTeacherLessons()
+  const authoredLessonSequence = publishedTeacherLessons
     .filter((item) =>
       item.status === 'published' &&
       item.gradeId === gradeId &&

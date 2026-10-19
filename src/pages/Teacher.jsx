@@ -1,13 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  readTeacherLessons,
-  writeTeacherLessons,
-  readTeacherClasses,
-  writeTeacherClasses,
-  readTeacherAssessments,
-  writeTeacherAssessments,
-} from '../teacherContent'
+  deleteAssessmentRecord,
+  deleteClassSchedule,
+  deleteTeacherLesson,
+  isBackendConfigured,
+  listAssessments,
+  listClassSchedules,
+  listTeacherLessons,
+  migrateLocalTeacherContent,
+  saveAssessment as saveAssessmentRecord,
+  saveClassSchedule,
+  saveTeacherLesson,
+} from '../backend'
 import { gradeOptions } from '../curriculumLevels'
 import { getSubjectsByGrade } from '../data/curriculumData.js'
 import '../App.css'
@@ -102,14 +107,34 @@ function canPublish(lesson) {
 }
 
 function Teacher() {
-  const [lessons, setLessons] = useState(readTeacherLessons)
-  const [classes, setClasses] = useState(readTeacherClasses)
-  const [assessments, setAssessments] = useState(readTeacherAssessments)
+  const [lessons, setLessons] = useState([])
+  const [classes, setClasses] = useState([])
+  const [assessments, setAssessments] = useState([])
   const [classForm, setClassForm] = useState(null)
   const [assessmentForm, setAssessmentForm] = useState(null)
   const [form, setForm] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    let active = true
+    async function loadTeacherData() {
+      try {
+        if (isBackendConfigured) await migrateLocalTeacherContent()
+        const [savedLessons, savedClasses, savedAssessments] = await Promise.all([
+          listTeacherLessons(), listClassSchedules(), listAssessments(),
+        ])
+        if (!active) return
+        setLessons(savedLessons)
+        setClasses(savedClasses)
+        setAssessments(savedAssessments)
+      } catch (loadError) {
+        if (active) setError(loadError.message || 'Unable to load saved teacher content.')
+      }
+    }
+    loadTeacherData()
+    return () => { active = false }
+  }, [])
 
   function beginCreate() {
     setForm(createLesson())
@@ -159,7 +184,7 @@ function Teacher() {
     }))
   }
 
-  function saveLesson(event) {
+  async function saveLesson(event) {
     event.preventDefault()
     setError('')
     setNotice('')
@@ -226,7 +251,7 @@ function Teacher() {
       : [savedLesson, ...lessons]
 
     try {
-      writeTeacherLessons(nextLessons)
+      await saveTeacherLesson(savedLesson)
       setLessons(nextLessons)
       setForm(null)
       setNotice(
@@ -235,11 +260,11 @@ function Teacher() {
           : 'Draft saved.'
       )
     } catch {
-      setError('Unable to save this lesson in browser storage.')
+      setError('Unable to save this lesson. Check your connection and try again.')
     }
   }
 
-  function changeStatus(lesson, status) {
+  async function changeStatus(lesson, status) {
     if (status === 'published' && !canPublish(lesson)) {
       setError(
         'Edit this draft and complete its lesson content, learning objectives, and quiz before publishing.'
@@ -248,14 +273,11 @@ function Teacher() {
       return
     }
 
-    const nextLessons = lessons.map((item) =>
-      item.id === lesson.id
-        ? { ...item, status, updatedAt: new Date().toISOString() }
-        : item
-    )
+    const updatedLesson = { ...lesson, status, updatedAt: new Date().toISOString() }
+    const nextLessons = lessons.map((item) => item.id === lesson.id ? updatedLesson : item)
 
     try {
-      writeTeacherLessons(nextLessons)
+      await saveTeacherLesson(updatedLesson)
       setLessons(nextLessons)
       setNotice(
         status === 'published'
@@ -264,24 +286,24 @@ function Teacher() {
       )
       setError('')
     } catch {
-      setError('Unable to update this lesson in browser storage.')
+      setError('Unable to update this lesson. Check your connection and try again.')
     }
   }
 
-  function deleteLesson(lesson) {
+  async function deleteLesson(lesson) {
     const nextLessons = lessons.filter((item) => item.id !== lesson.id)
 
     try {
-      writeTeacherLessons(nextLessons)
+      await deleteTeacherLesson(lesson.id)
       setLessons(nextLessons)
       setNotice(`"${lesson.title}" was deleted.`)
       setError('')
     } catch {
-      setError('Unable to delete this lesson from browser storage.')
+      setError('Unable to delete this lesson. Check your connection and try again.')
     }
   }
 
-  function saveClass(event) {
+  async function saveClass(event) {
     event.preventDefault()
     const savedClass = {
       ...classForm,
@@ -296,17 +318,17 @@ function Teacher() {
       (a.startsAt || a.availability).localeCompare(b.startsAt || b.availability)
     )
     try {
-      writeTeacherClasses(nextClasses)
+      await saveClassSchedule(savedClass)
       setClasses(nextClasses)
       setClassForm(null)
       setNotice('Class schedule saved and shown in the student dashboard.')
       setError('')
     } catch {
-      setError('Unable to save this class schedule in browser storage.')
+      setError('Unable to save this class schedule. Check your connection and try again.')
     }
   }
 
-  function saveAssessment(event) {
+  async function saveAssessment(event) {
     event.preventDefault()
     const savedAssessment = {
       ...assessmentForm,
@@ -323,28 +345,36 @@ function Teacher() {
       a.deadline.localeCompare(b.deadline)
     )
     try {
-      writeTeacherAssessments(nextAssessments)
+      await saveAssessmentRecord(savedAssessment)
       setAssessments(nextAssessments)
       setAssessmentForm(null)
       setNotice('Assessment assigned with a deadline and shown in the student dashboard.')
       setError('')
     } catch {
-      setError('Unable to save this assessment in browser storage.')
+      setError('Unable to save this assessment. Check your connection and try again.')
     }
   }
 
-  function deleteClass(item) {
+  async function deleteClass(item) {
     const nextClasses = classes.filter((entry) => entry.id !== item.id)
-    writeTeacherClasses(nextClasses)
-    setClasses(nextClasses)
-    setNotice(`Class "${item.title}" removed from the schedule.`)
+    try {
+      await deleteClassSchedule(item.id)
+      setClasses(nextClasses)
+      setNotice(`Class "${item.title}" removed from the schedule.`)
+    } catch {
+      setError('Unable to remove this class. Check your connection and try again.')
+    }
   }
 
-  function deleteAssessment(item) {
+  async function deleteAssessment(item) {
     const nextAssessments = assessments.filter((entry) => entry.id !== item.id)
-    writeTeacherAssessments(nextAssessments)
-    setAssessments(nextAssessments)
-    setNotice(`Assessment "${item.title}" removed.`)
+    try {
+      await deleteAssessmentRecord(item.id)
+      setAssessments(nextAssessments)
+      setNotice(`Assessment "${item.title}" removed.`)
+    } catch {
+      setError('Unable to remove this assessment. Check your connection and try again.')
+    }
   }
 
   return (
@@ -896,7 +926,7 @@ function Teacher() {
       </section>
 
       <p className="teacher-storage-note">
-        Teacher content is stored in this browser and is not shared with other devices.
+        {isBackendConfigured ? 'Teacher lessons, schedules, and assessments are saved to your ElimuNest database.' : 'Backend database is not configured yet; teacher content is saved in this browser until you add the Supabase settings.'}
       </p>
     </main>
   )

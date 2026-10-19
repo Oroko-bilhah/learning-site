@@ -1,16 +1,17 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { readTeacherLessons } from '../teacherContent'
+import { listPublishedLessons } from '../backend'
 import { getGradeName } from '../curriculumLevels'
 import { getLowerPrimaryTopics } from '../lowerPrimaryContent'
 import { getGradeBandTopics } from '../gradeBandContent'
 import { getSubject } from '../data/curriculumData.js'
+import { scopedStorageKey } from '../auth'
 import '../App.css'
 
 function readCompletedLessonSlugs() {
   try {
     const saved = JSON.parse(
-      localStorage.getItem('elimuNestCompletedLessons') || '[]'
+      localStorage.getItem(scopedStorageKey('elimuNestCompletedLessons')) || '[]'
     )
     return new Set(Array.isArray(saved) ? saved : [])
   } catch {
@@ -234,20 +235,28 @@ function createLearningArea(subjectSlug, gradeId) {
 export default function SubjectDetail() {
   const { gradeId, subjectName } = useParams()
   const [expandedTopic, setExpandedTopic] = useState(1)
-  const [teacherLessons, setTeacherLessons] = useState(readTeacherLessons)
+  const [teacherLessons, setTeacherLessons] = useState([])
   const [completedLessons, setCompletedLessons] = useState(
     readCompletedLessonSlugs
   )
 
   useEffect(() => {
-    const refreshLessons = () => {
-      setTeacherLessons(readTeacherLessons())
+    let active = true
+    const refreshLessons = async () => {
+      const savedLessons = await listPublishedLessons(gradeId)
+      if (!active) return
+      setTeacherLessons(savedLessons)
       setCompletedLessons(readCompletedLessonSlugs())
     }
-
+    refreshLessons().catch(() => setTeacherLessons([]))
     window.addEventListener('storage', refreshLessons)
-    return () => window.removeEventListener('storage', refreshLessons)
-  }, [])
+    window.addEventListener('elimu-content-change', refreshLessons)
+    return () => {
+      active = false
+      window.removeEventListener('storage', refreshLessons)
+      window.removeEventListener('elimu-content-change', refreshLessons)
+    }
+  }, [gradeId])
 
   const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
   const isIntermediateGrade = /^grade-[4-9]$/.test(gradeId)
