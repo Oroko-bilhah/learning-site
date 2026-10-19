@@ -1,28 +1,8 @@
 // Comprehensive Kenyan Senior High Curriculum Data
 // Covers 8-4-4 Form 3 and CBC Grade 10 (Senior School) across all official KICD learning areas
+import { gradeOptions, getLearningAreas } from '../curriculumLevels.js'
 
-export const gradeOptions = [
-  {
-    id: 'form-3',
-    name: 'Form 3',
-    curriculum: '8-4-4 Curriculum',
-    subtitle: 'KCSE Preparation Stage',
-    badge: '8-4-4 KCSE',
-    color: 'blue',
-    description:
-      'In-depth syllabus notes, worked examples, and exam-standard practice questions for Form 3 learners preparing for KCSE.',
-  },
-  {
-    id: 'grade-10',
-    name: 'Grade 10',
-    curriculum: 'CBC / CBE Senior School',
-    subtitle: 'Pathway Specialization',
-    badge: 'CBC Senior School',
-    color: 'green',
-    description:
-      'Competency-based learning areas across STEM, Social Sciences, and Arts & Sports Science pathways with real-world applications.',
-  },
-]
+export { gradeOptions }
 
 export const grade10Pathways = [
   {
@@ -2668,10 +2648,18 @@ export const grade10Subjects = [
   },
 ]
 
+// Grade 11 follows the same senior-school learning-area catalogue while
+// presenting its own grade identity in learner and teacher workflows.
+export const grade11Subjects = grade10Subjects.map((subject) => ({
+  ...subject,
+  curriculum: 'grade-11',
+  topics: subject.topics.map((topic) => ({ ...topic, lessons: [...topic.lessons] })),
+}))
+
 // Helper function to look up a subject by grade and slug/name
 export function getSubject(gradeId, subjectSlug) {
   const normalizedSlug = subjectSlug?.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const subjectList = gradeId === 'grade-10' ? grade10Subjects : form3Subjects
+  const subjectList = getSubjectsByGrade(gradeId)
 
   return subjectList.find(
     (subj) =>
@@ -2682,7 +2670,13 @@ export function getSubject(gradeId, subjectSlug) {
 
 // Helper function to look up subjects for a specific grade
 export function getSubjectsByGrade(gradeId) {
-  return gradeId === 'grade-10' ? grade10Subjects : form3Subjects
+  if (['grade-1', 'grade-2', 'grade-3', 'grade-4', 'grade-5', 'grade-6', 'grade-7', 'grade-8', 'grade-9'].includes(gradeId)) {
+    return getLearningAreas(gradeId)
+  }
+  if (gradeId === 'grade-10') return grade10Subjects
+  if (gradeId === 'grade-11') return grade11Subjects
+  if (['form-3', 'form-4'].includes(gradeId)) return form3Subjects
+  return []
 }
 
 // Global search across all curricula and subjects

@@ -1,6 +1,7 @@
 
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { readTeacherClasses, readTeacherAssessments } from '../teacherContent'
 import '../App.css'
 
 const icons = {
@@ -108,6 +109,8 @@ function Dashboard() {
   const [bookmarkCount, setBookmarkCount] = useState(
     () => readSavedList('elimuNestBookmarks').length
   )
+  const [classes, setClasses] = useState(readTeacherClasses)
+  const [assessments, setAssessments] = useState(readTeacherAssessments)
 
   useEffect(() => {
     function updateStats() {
@@ -118,6 +121,8 @@ function Dashboard() {
       setBookmarkCount(
         readSavedList('elimuNestBookmarks').length
       )
+      setClasses(readTeacherClasses())
+      setAssessments(readTeacherAssessments())
     }
 
     // Refresh when the student returns to the Dashboard.
@@ -187,6 +192,40 @@ function Dashboard() {
             View saved lessons <DashboardIcon name="arrow" size={16} />
           </Link>
         </article>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-heading">
+          <div>
+            <p className="eyebrow">LIVE LEARNING</p>
+            <h2>Classes and assigned work</h2>
+          </div>
+        </div>
+        <div className="dashboard-activity-grid">
+          <article className="dashboard-activity-card">
+            <h3>Upcoming classes</h3>
+            {classes.length ? classes.map((item) => (
+              <div className="dashboard-activity-item" key={item.id}>
+                <strong>{item.title}</strong>
+                <span>{item.grade} · {item.subject} · {item.mode}</span>
+                <span>{item.flexible ? `Flexible: ${item.availability}` : new Date(item.startsAt).toLocaleString()}</span>
+                {item.meetingLink && <a href={item.meetingLink} target="_blank" rel="noreferrer">Join online class</a>}
+              </div>
+            )) : <p>No classes scheduled yet.</p>}
+          </article>
+          <article className="dashboard-activity-card">
+            <h3>Quizzes and tests</h3>
+            {assessments.length ? assessments.map((item) => (
+              <details className="dashboard-activity-item" key={item.id}>
+                <summary><strong>{item.type}: {item.title}</strong></summary>
+                <span>{item.grade} · {item.subject}</span>
+                <span>Deadline: {new Date(item.deadline).toLocaleString()}</span>
+                {item.instructions && <p>{item.instructions}</p>}
+                <ol>{item.questions.map((question, index) => <li key={`${item.id}-${index}`}>{question}</li>)}</ol>
+              </details>
+            )) : <p>No assigned quizzes or tests.</p>}
+          </article>
+        </div>
       </section>
 
       <section className="dashboard-section">

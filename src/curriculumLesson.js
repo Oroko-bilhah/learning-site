@@ -1,10 +1,23 @@
-import { form3Subjects, grade10Subjects } from './data/curriculumData'
+import { form3Subjects, grade10Subjects, grade11Subjects } from './data/curriculumData.js'
+import { getGradeName } from './curriculumLevels.js'
+import { createLowerPrimaryLesson } from './lowerPrimaryContent.js'
+import { createGradeBandLesson } from './gradeBandContent.js'
 
 const toSlug = (value) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 export function createCurriculumLesson(gradeId, subjectName, lessonSlug) {
-  const subjects = gradeId === 'grade-10' ? grade10Subjects : form3Subjects
+  const lowerPrimaryLesson = createLowerPrimaryLesson(gradeId, subjectName, lessonSlug)
+  if (lowerPrimaryLesson) return lowerPrimaryLesson
+  const gradeBandLesson = createGradeBandLesson(gradeId, subjectName, lessonSlug)
+  if (gradeBandLesson) return gradeBandLesson
+  const subjects = gradeId === 'grade-10'
+    ? grade10Subjects
+    : gradeId === 'grade-11'
+      ? grade11Subjects
+    : gradeId === 'form-3'
+      ? form3Subjects
+      : []
   const subject = subjects.find(
     (item) => item.name.toLowerCase() === decodeURIComponent(subjectName).toLowerCase()
   )
@@ -14,7 +27,7 @@ export function createCurriculumLesson(gradeId, subjectName, lessonSlug) {
     const title = topic.lessons.find((item) => toSlug(item) === lessonSlug)
     if (!title) continue
 
-    const grade = gradeId === 'grade-10' ? 'Grade 10' : 'Form 3'
+    const grade = getGradeName(gradeId)
     const focus = topic.description.replace(/[.]+$/, '')
     return {
       title,
@@ -80,5 +93,73 @@ export function createCurriculumLesson(gradeId, subjectName, lessonSlug) {
       ],
     }
   }
-  return null
+  // Some lessons live in the subject pages' introductory learning paths rather
+  // than the detailed curriculum catalogue. Keep those existing links usable.
+  const title = lessonSlug
+    .split('-')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  const subjectTitle = decodeURIComponent(subjectName)
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  const grade = getGradeName(gradeId)
+
+  return {
+    title,
+    subject: subjectTitle,
+    grade,
+    topic: `${subjectTitle} learning`,
+    duration: '15 minutes',
+    objectives: [
+      `Describe the key ideas in ${title.toLowerCase()}.`,
+      `Connect ${title.toLowerCase()} to learning in ${subjectTitle}.`,
+      'Explain your answer using a relevant example or clear reasoning.',
+    ],
+    sections: [
+      {
+        heading: `Understanding ${title}`,
+        paragraphs: [
+          `${title} is part of ${subjectTitle}. Begin by identifying the important terms and ideas, then describe how they relate to one another. Use your class notes and examples from the Kenyan curriculum to build an accurate explanation.`,
+          `Apply the idea to a familiar situation from school, home, or the community. State what you observe, explain what it shows, and use the relevant subject knowledge to support your conclusion.`,
+        ],
+      },
+      {
+        heading: 'Practise the skill',
+        paragraphs: [
+          `When answering a question about ${title.toLowerCase()}, first identify what the task asks. Select the relevant facts, method, or evidence, organise your answer clearly, and check that your conclusion responds to the question.`,
+        ],
+      },
+    ],
+    example: {
+      question: `How can you explain an idea from ${title.toLowerCase()}?`,
+      steps: [
+        'Identify the main idea in the question.',
+        'Recall the relevant subject knowledge and choose an example.',
+        'Explain how the example supports your answer.',
+      ],
+      answer: 'A clear explanation that uses relevant knowledge and a suitable example.',
+    },
+    questions: [
+      {
+        question: `What is a good first step when answering a question about ${title.toLowerCase()}?`,
+        options: ['Identify what the task is asking', 'Write unrelated facts', 'Skip the question', 'Guess without reading'],
+        answer: 'Identify what the task is asking',
+        explanation: 'Understanding the task helps you choose relevant knowledge and answer directly.',
+      },
+      {
+        question: 'What makes an explanation stronger?',
+        options: ['An unrelated example', 'Relevant evidence or an example with clear reasoning', 'Repeating the question only', 'Leaving out the conclusion'],
+        answer: 'Relevant evidence or an example with clear reasoning',
+        explanation: 'Relevant support and reasoning show how your ideas answer the task.',
+      },
+      {
+        question: `Which subject is this lesson part of?`,
+        options: [subjectTitle, 'An unrelated subject', 'A school timetable', 'A list of classroom rules'],
+        answer: subjectTitle,
+        explanation: `${title} is listed in the ${subjectTitle} learning path.`,
+      },
+    ],
+  }
 }

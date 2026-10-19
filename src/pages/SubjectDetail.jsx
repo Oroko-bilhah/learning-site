@@ -1,6 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { readTeacherLessons } from '../teacherContent'
+import { getGradeName } from '../curriculumLevels'
+import { getLowerPrimaryTopics } from '../lowerPrimaryContent'
+import { getGradeBandTopics } from '../gradeBandContent'
+import { getSubject } from '../data/curriculumData.js'
 import '../App.css'
 
 function readCompletedLessonSlugs() {
@@ -169,6 +173,64 @@ const subjectContent = {
   },
 }
 
+function createLearningArea(subjectSlug, gradeId) {
+  const normalizedSlug = decodeURIComponent(subjectSlug).toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const name = decodeURIComponent(subjectSlug)
+    .split('-')
+    .map((word) => word.toUpperCase() === 'CRE' || word.toUpperCase() === 'IRE' || word.toUpperCase() === 'HRE'
+      ? word.toUpperCase()
+      : word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  const lowerPrimaryTopics = getLowerPrimaryTopics(normalizedSlug, gradeId)
+  if (lowerPrimaryTopics) {
+    const displayName = ({ cre: 'CRE', ire: 'IRE', hre: 'HRE' })[normalizedSlug] || name
+    return {
+      name: displayName,
+      icon: '✦',
+      description: `${getGradeName(gradeId)} activities to explore, practise, and share your learning.`,
+      topics: lowerPrimaryTopics,
+    }
+  }
+  const gradeBandTopics = getGradeBandTopics(normalizedSlug, gradeId)
+  if (gradeBandTopics) {
+    return {
+      name,
+      icon: '✦',
+      description: `${getGradeName(gradeId)} learning path with practical examples, activities, and skills practice.`,
+      topics: gradeBandTopics,
+    }
+  }
+  const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
+  const topicsByArea = {
+    mathematics: ['Numbers and counting', 'Operations and patterns', 'Shapes and measurement'],
+    'english-activities': ['Listening and speaking', 'Reading together', 'Early writing'],
+    english: ['Listening and speaking', 'Reading and comprehension', 'Writing and grammar'],
+    kiswahili: ['Kusikiliza na kuzungumza', 'Kusoma', 'Kuandika'],
+    'environmental-activities': ['Myself and my family', 'Our school and community', 'Plants, animals and the environment'],
+    'science-technology': ['Living things', 'Materials and forces', 'Health and environment'],
+    'integrated-science': ['Life and living things', 'Matter and energy', 'Science in the environment'],
+    'social-studies': ['People and relationships', 'Places and maps', 'Citizenship and community'],
+    'creative-activities': ['Exploring materials', 'Making and creating', 'Sharing creative work'],
+    'creative-arts': ['Art and design', 'Music and movement', 'Creative performance'],
+  }
+  const topicTitles = topicsByArea[subjectSlug] || [
+    `${name} foundations`,
+    `${name} skills and practice`,
+    `Using ${name.toLowerCase()} in daily life`,
+  ]
+  return {
+    name,
+    icon: '✦',
+    description: `${getGradeName(gradeId)} learning activities in ${name}, with examples connected to the Kenyan curriculum.`,
+    topics: topicTitles.map((title, index) => ({
+      id: index + 1,
+      title,
+      description: `Build ${isLowerPrimary ? 'foundational' : 'subject'} knowledge and practise ${title.toLowerCase()}.`,
+      lessons: [`Introduction to ${title}`, `Practising ${title}`, `Applying ${title}`],
+    })),
+  }
+}
+
 export default function SubjectDetail() {
   const { gradeId, subjectName } = useParams()
   const [expandedTopic, setExpandedTopic] = useState(1)
@@ -187,13 +249,15 @@ export default function SubjectDetail() {
     return () => window.removeEventListener('storage', refreshLessons)
   }, [])
 
-  const subject = subjectContent[subjectName?.toLowerCase()]
-  const gradeName =
-    gradeId === 'form-3'
-      ? 'Form 3'
-      : gradeId === 'grade-10'
-        ? 'Grade 10'
-        : 'Selected grade'
+  const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
+  const isIntermediateGrade = /^grade-[4-9]$/.test(gradeId)
+  const grade10Subject = ['grade-10', 'grade-11'].includes(gradeId)
+    ? getSubject(gradeId, subjectName)
+    : null
+  const subject = grade10Subject || ((isLowerPrimary || isIntermediateGrade)
+    ? createLearningArea(subjectName || '', gradeId)
+    : subjectContent[subjectName?.toLowerCase()]) || createLearningArea(subjectName || '', gradeId)
+  const gradeName = getGradeName(gradeId)
 
   if (!subject) {
     return (
@@ -281,7 +345,7 @@ export default function SubjectDetail() {
     : 0
 
   return (
-    <main className="subject-detail-page">
+    <main className={`subject-detail-page${isLowerPrimary ? ' lower-primary-page' : ''}`}>
       <nav className="detail-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Home</Link>
         <span>/</span>

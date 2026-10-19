@@ -37,8 +37,8 @@ const subjects = [
 
 const homeFeatures = [
   {
-    title: 'Guided learning',
-    description: 'Clear explanations and examples for every topic.',
+    title: 'Expert teachers',
+    description: 'Get clear guidance from expert teachers who help you master each topic.',
     icon: (
       <>
         <circle cx="12" cy="8" r="4" />
@@ -47,8 +47,8 @@ const homeFeatures = [
     ),
   },
   {
-    title: 'Learn at your pace',
-    description: 'Study whenever you have time and pick up where you left off.',
+    title: 'Flexible schedules',
+    description: 'Arrange learning around your day with flexible class times and self-paced study.',
     icon: (
       <>
         <circle cx="12" cy="12" r="9" />
@@ -57,8 +57,8 @@ const homeFeatures = [
     ),
   },
   {
-    title: 'Useful resources',
-    description: 'Explore lessons and practice questions in one place.',
+    title: 'Online classes',
+    description: 'Join online classes from wherever you are and continue learning between sessions.',
     icon: (
       <>
         <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
@@ -181,13 +181,13 @@ function HomePage() {
             <article className="curriculum-card form-three">
               <div className="curriculum-icon">03</div>
               <div className="curriculum-copy">
-                <span>8-4-4 CURRICULUM</span>
-                <h3>Form 3</h3>
+                <span>COMPETENCY-BASED CURRICULUM</span>
+                <h3>Grades 1 to 11</h3>
                 <p>
-                  Strengthen your understanding and prepare for your KCSE journey.
+                  Explore CBC learning areas from lower primary through senior school.
                 </p>
-                <Link to="/subjects">
-                  Explore Form 3 <span>&gt;</span>
+                <Link to="/subjects?grade=grade-1">
+                  Choose a grade <span>&gt;</span>
                 </Link>
               </div>
             </article>
@@ -195,13 +195,13 @@ function HomePage() {
             <article className="curriculum-card grade-ten">
               <div className="curriculum-icon">10</div>
               <div className="curriculum-copy">
-                <span>CBC / CBE CURRICULUM</span>
-                <h3>Grade 10</h3>
+                <span>8-4-4 CURRICULUM</span>
+                <h3>Form 3 and Form 4</h3>
                 <p>
-                  Explore senior school learning through your subjects and pathways.
+                  Continue secondary learning and prepare for KCSE.
                 </p>
-                <Link to="/subjects">
-                  Explore Grade 10 <span>&gt;</span>
+                <Link to="/subjects?grade=form-4">
+                  Choose a form <span>&gt;</span>
                 </Link>
               </div>
             </article>

@@ -1,19 +1,29 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { readTeacherLessons, writeTeacherLessons } from '../teacherContent'
+import {
+  readTeacherLessons,
+  writeTeacherLessons,
+  readTeacherClasses,
+  writeTeacherClasses,
+  readTeacherAssessments,
+  writeTeacherAssessments,
+} from '../teacherContent'
+import { gradeOptions } from '../curriculumLevels'
+import { getSubjectsByGrade } from '../data/curriculumData.js'
 import '../App.css'
 
-const subjectOptions = [
-  'Mathematics',
-  'English',
-  'Biology',
-  'Chemistry',
+const getSubjectOptions = (gradeId) => [
+  ...new Set(getSubjectsByGrade(gradeId).map((subject) => subject.name)),
 ]
 
-const gradeOptions = [
-  { id: 'form-3', name: 'Form 3' },
-  { id: 'grade-10', name: 'Grade 10' },
-]
+function updateGradeSelection(current, gradeId) {
+  const subjects = getSubjectOptions(gradeId)
+  return {
+    ...current,
+    gradeId,
+    subject: subjects.includes(current.subject) ? current.subject : subjects[0],
+  }
+}
 
 function createQuestion() {
   return {
@@ -93,6 +103,10 @@ function canPublish(lesson) {
 
 function Teacher() {
   const [lessons, setLessons] = useState(readTeacherLessons)
+  const [classes, setClasses] = useState(readTeacherClasses)
+  const [assessments, setAssessments] = useState(readTeacherAssessments)
+  const [classForm, setClassForm] = useState(null)
+  const [assessmentForm, setAssessmentForm] = useState(null)
   const [form, setForm] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -267,13 +281,79 @@ function Teacher() {
     }
   }
 
+  function saveClass(event) {
+    event.preventDefault()
+    const savedClass = {
+      ...classForm,
+      id: createLessonId(),
+      title: classForm.title.trim(),
+      subject: classForm.subject,
+      grade: gradeOptions.find((grade) => grade.id === classForm.gradeId).name,
+      availability: classForm.availability.trim(),
+      meetingLink: classForm.meetingLink.trim(),
+    }
+    const nextClasses = [...classes, savedClass].sort((a, b) =>
+      (a.startsAt || a.availability).localeCompare(b.startsAt || b.availability)
+    )
+    try {
+      writeTeacherClasses(nextClasses)
+      setClasses(nextClasses)
+      setClassForm(null)
+      setNotice('Class schedule saved and shown in the student dashboard.')
+      setError('')
+    } catch {
+      setError('Unable to save this class schedule in browser storage.')
+    }
+  }
+
+  function saveAssessment(event) {
+    event.preventDefault()
+    const savedAssessment = {
+      ...assessmentForm,
+      id: createLessonId(),
+      title: assessmentForm.title.trim(),
+      instructions: assessmentForm.instructions.trim(),
+      questions: assessmentForm.questionsText
+        .split('\n')
+        .map((question) => question.trim())
+        .filter(Boolean),
+      grade: gradeOptions.find((grade) => grade.id === assessmentForm.gradeId).name,
+    }
+    const nextAssessments = [...assessments, savedAssessment].sort((a, b) =>
+      a.deadline.localeCompare(b.deadline)
+    )
+    try {
+      writeTeacherAssessments(nextAssessments)
+      setAssessments(nextAssessments)
+      setAssessmentForm(null)
+      setNotice('Assessment assigned with a deadline and shown in the student dashboard.')
+      setError('')
+    } catch {
+      setError('Unable to save this assessment in browser storage.')
+    }
+  }
+
+  function deleteClass(item) {
+    const nextClasses = classes.filter((entry) => entry.id !== item.id)
+    writeTeacherClasses(nextClasses)
+    setClasses(nextClasses)
+    setNotice(`Class "${item.title}" removed from the schedule.`)
+  }
+
+  function deleteAssessment(item) {
+    const nextAssessments = assessments.filter((entry) => entry.id !== item.id)
+    writeTeacherAssessments(nextAssessments)
+    setAssessments(nextAssessments)
+    setNotice(`Assessment "${item.title}" removed.`)
+  }
+
   return (
     <main className="teacher-page">
       <header className="teacher-header">
         <div>
           <p className="eyebrow">TEACHER WORKSPACE</p>
           <h1>Manage learning content</h1>
-          <p>Create lessons, author quizzes, and publish content for students.</p>
+          <p>Create lessons, schedule flexible online or in-person classes, and set deadline-based assessments.</p>
         </div>
         <button
           className="teacher-primary-button"
@@ -300,6 +380,144 @@ function Teacher() {
           <span>Published</span>
         </div>
       </div>
+
+      <section className="teacher-library teacher-activity-tools">
+        <div className="teacher-section-heading">
+          <div>
+            <p className="eyebrow">LIVE LEARNING</p>
+            <h2>Classes and schedules</h2>
+            <p>Set a fixed class time or offer a flexible time window. Online classes can include a meeting link.</p>
+          </div>
+          <button
+            className="teacher-primary-button"
+            type="button"
+            onClick={() => {
+              setClassForm({ title: '', subject: 'Mathematics', gradeId: 'form-3', startsAt: '', flexible: false, availability: '', mode: 'Online', meetingLink: '' })
+              setAssessmentForm(null)
+              setNotice('')
+              setError('')
+            }}
+          >
+            Schedule a class
+          </button>
+        </div>
+
+        {classForm && (
+          <form className="teacher-form activity-form" onSubmit={saveClass}>
+            <div className="teacher-field-grid">
+              <label className="teacher-field teacher-field-wide">Class title
+                <input required maxLength={120} value={classForm.title} onChange={(event) => setClassForm({ ...classForm, title: event.target.value })} />
+              </label>
+              <label className="teacher-field">Subject
+                <select value={classForm.subject} onChange={(event) => setClassForm({ ...classForm, subject: event.target.value })}>{getSubjectOptions(classForm.gradeId).map((subject) => <option key={subject}>{subject}</option>)}</select>
+              </label>
+              <label className="teacher-field">Grade
+                <select value={classForm.gradeId} onChange={(event) => setClassForm(updateGradeSelection(classForm, event.target.value))}>{gradeOptions.map((grade) => <option key={grade.id} value={grade.id}>{grade.name}</option>)}</select>
+              </label>
+              <label className="teacher-field">Class format
+                <select value={classForm.mode} onChange={(event) => setClassForm({ ...classForm, mode: event.target.value })}><option>Online</option><option>In person</option></select>
+              </label>
+              <label className="teacher-field teacher-flexible-option">
+                <input type="checkbox" checked={classForm.flexible} onChange={(event) => setClassForm({ ...classForm, flexible: event.target.checked })} /> Offer flexible scheduling
+              </label>
+              {classForm.flexible ? (
+                <label className="teacher-field teacher-field-wide">Available times / scheduling note
+                  <input required maxLength={160} placeholder="For example: Weekdays after 4 pm; agree a time with the teacher" value={classForm.availability} onChange={(event) => setClassForm({ ...classForm, availability: event.target.value })} />
+                </label>
+              ) : (
+                <label className="teacher-field teacher-field-wide">Class date and time
+                  <input required type="datetime-local" value={classForm.startsAt} onChange={(event) => setClassForm({ ...classForm, startsAt: event.target.value })} />
+                </label>
+              )}
+              {classForm.mode === 'Online' && (
+                <label className="teacher-field teacher-field-wide">Online meeting link
+                  <input type="url" placeholder="https://..." value={classForm.meetingLink} onChange={(event) => setClassForm({ ...classForm, meetingLink: event.target.value })} />
+                </label>
+              )}
+            </div>
+            <div className="teacher-form-actions">
+              <button className="teacher-secondary-button" type="button" onClick={() => setClassForm(null)}>Cancel</button>
+              <button className="teacher-primary-button" type="submit">Save class</button>
+            </div>
+          </form>
+        )}
+
+        {classes.length ? (
+          <div className="teacher-lesson-list">
+            {classes.map((item) => (
+              <article className="teacher-lesson-card" key={item.id}>
+                <div className="teacher-lesson-information"><span className="teacher-status published">{item.mode}{item.flexible ? ' · Flexible' : ''}</span><h3>{item.title}</h3><p>{item.grade} · {item.subject} · {item.flexible ? item.availability : new Date(item.startsAt).toLocaleString()}</p>{item.meetingLink && <a href={item.meetingLink} target="_blank" rel="noreferrer" className="teacher-text-button">Online class link</a>}</div>
+                <button className="teacher-text-button danger" type="button" onClick={() => deleteClass(item)}>Remove</button>
+              </article>
+            ))}
+          </div>
+        ) : <p className="teacher-storage-note">No classes scheduled yet.</p>}
+      </section>
+
+      <section className="teacher-library teacher-activity-tools">
+        <div className="teacher-section-heading">
+          <div>
+            <p className="eyebrow">ASSIGNED WORK</p>
+            <h2>Quizzes and tests</h2>
+            <p>These are separate assignments with deadlines, independent of lesson practice questions.</p>
+          </div>
+          <button
+            className="teacher-primary-button"
+            type="button"
+            onClick={() => {
+              setAssessmentForm({ title: '', type: 'Quiz', subject: 'Mathematics', gradeId: 'form-3', deadline: '', instructions: '', questionsText: '' })
+              setClassForm(null)
+              setNotice('')
+              setError('')
+            }}
+          >
+            Create assessment
+          </button>
+        </div>
+
+        {assessmentForm && (
+          <form className="teacher-form activity-form" onSubmit={saveAssessment}>
+            <div className="teacher-field-grid">
+              <label className="teacher-field teacher-field-wide">Assessment title
+                <input required maxLength={120} value={assessmentForm.title} onChange={(event) => setAssessmentForm({ ...assessmentForm, title: event.target.value })} />
+              </label>
+              <label className="teacher-field">Assessment type
+                <select value={assessmentForm.type} onChange={(event) => setAssessmentForm({ ...assessmentForm, type: event.target.value })}><option>Quiz</option><option>Test</option></select>
+              </label>
+              <label className="teacher-field">Subject
+                <select value={assessmentForm.subject} onChange={(event) => setAssessmentForm({ ...assessmentForm, subject: event.target.value })}>{getSubjectOptions(assessmentForm.gradeId).map((subject) => <option key={subject}>{subject}</option>)}</select>
+              </label>
+              <label className="teacher-field">Grade
+                <select value={assessmentForm.gradeId} onChange={(event) => setAssessmentForm(updateGradeSelection(assessmentForm, event.target.value))}>{gradeOptions.map((grade) => <option key={grade.id} value={grade.id}>{grade.name}</option>)}</select>
+              </label>
+              <label className="teacher-field">Deadline
+                <input required type="datetime-local" value={assessmentForm.deadline} onChange={(event) => setAssessmentForm({ ...assessmentForm, deadline: event.target.value })} />
+              </label>
+              <label className="teacher-field teacher-field-wide">Instructions
+                <textarea rows="3" placeholder="Tell learners what to do and how to submit." value={assessmentForm.instructions} onChange={(event) => setAssessmentForm({ ...assessmentForm, instructions: event.target.value })} />
+              </label>
+              <label className="teacher-field teacher-field-wide">Assessment questions (one per line)
+                <textarea required rows="6" placeholder="Enter the questions for this quiz or test, one per line." value={assessmentForm.questionsText} onChange={(event) => setAssessmentForm({ ...assessmentForm, questionsText: event.target.value })} />
+              </label>
+            </div>
+            <div className="teacher-form-actions">
+              <button className="teacher-secondary-button" type="button" onClick={() => setAssessmentForm(null)}>Cancel</button>
+              <button className="teacher-primary-button" type="submit">Assign assessment</button>
+            </div>
+          </form>
+        )}
+
+        {assessments.length ? (
+          <div className="teacher-lesson-list">
+            {assessments.map((item) => (
+              <article className="teacher-lesson-card" key={item.id}>
+                <div className="teacher-lesson-information"><span className="teacher-status draft">{item.type} · Due {new Date(item.deadline).toLocaleString()}</span><h3>{item.title}</h3><p>{item.grade} · {item.subject} · {item.questions.length} questions</p><span className="teacher-lesson-meta">{item.instructions}</span></div>
+                <button className="teacher-text-button danger" type="button" onClick={() => deleteAssessment(item)}>Remove</button>
+              </article>
+            ))}
+          </div>
+        ) : <p className="teacher-storage-note">No separate quizzes or tests assigned yet.</p>}
+      </section>
 
       {notice && <p className="teacher-message success" role="status">{notice}</p>}
       {error && <p className="teacher-message error" role="alert">{error}</p>}
@@ -347,7 +565,7 @@ function Teacher() {
                     setForm({ ...form, subject: event.target.value })
                   }
                 >
-                  {subjectOptions.map((subject) => (
+                  {getSubjectOptions(form.gradeId).map((subject) => (
                     <option key={subject}>{subject}</option>
                   ))}
                 </select>
@@ -358,7 +576,7 @@ function Teacher() {
                 <select
                   value={form.gradeId}
                   onChange={(event) =>
-                    setForm({ ...form, gradeId: event.target.value })
+                    setForm(updateGradeSelection(form, event.target.value))
                   }
                 >
                   {gradeOptions.map((grade) => (

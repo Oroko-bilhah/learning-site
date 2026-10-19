@@ -1,23 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { gradeOptions, getLearningAreas } from '../curriculumLevels'
 import '../App.css'
-
-const gradeOptions = [
-  {
-    id: 'form-3',
-    name: 'Form 3',
-    curriculum: '8-4-4 Curriculum',
-    description:
-      'Explore subjects and learning resources for Form 3.',
-  },
-  {
-    id: 'grade-10',
-    name: 'Grade 10',
-    curriculum: 'CBC / CBE Senior School',
-    description:
-      'Explore Senior School learning areas and pathways.',
-  },
-]
 
 const form3Subjects = [
   {
@@ -405,7 +389,11 @@ const grade10Subjects = [
 ]
 
 export default function Subjects() {
-  const [selectedGrade, setSelectedGrade] = useState('form-3')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialGrade = gradeOptions.some((grade) => grade.id === searchParams.get('grade'))
+    ? searchParams.get('grade')
+    : 'grade-1'
+  const [selectedGrade, setSelectedGrade] = useState(initialGrade)
   const [selectedPathway, setSelectedPathway] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -413,51 +401,32 @@ export default function Subjects() {
     (grade) => grade.id === selectedGrade
   )
 
-  const visibleForm3Subjects = form3Subjects.filter((subject) =>
-    subject.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const visibleGrade10Subjects = grade10Subjects.filter((subject) => {
-    const matchesPathway =
+  const isSeniorSchool = currentGrade?.stage === 'Senior School'
+  const isEightFourFour = currentGrade?.stage === '8-4-4'
+  const catalogSubjects = isSeniorSchool
+    ? grade10Subjects
+    : isEightFourFour
+      ? form3Subjects
+      : getLearningAreas(selectedGrade)
+  const visibleSubjects = catalogSubjects.filter((subject) => {
+    const matchesPathway = !isSeniorSchool ||
       selectedPathway === 'all' ||
       subject.pathways.includes(selectedPathway)
-
-    const matchesSearch = subject.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-
-    return matchesPathway && matchesSearch
+    return matchesPathway && subject.name.toLowerCase().includes(searchTerm.toLowerCase())
   })
-
-  const subjectsToShow =
-    selectedGrade === 'form-3'
-      ? visibleForm3Subjects
-      : visibleGrade10Subjects
-
-  const groupedSubjects =
-    selectedGrade === 'grade-10'
-      ? [
-          'Core learning areas',
-          'STEM',
-          'Social Sciences',
-          'Arts & Sports Science',
-        ]
-          .map((group) => ({
-            name: group,
-            subjects: visibleGrade10Subjects.filter(
-              (subject) => subject.group === group
-            ),
-          }))
-          .filter((group) => group.subjects.length > 0)
-      : [
-          {
-            name: 'Form 3 subjects',
-            subjects: visibleForm3Subjects,
-          },
-        ].filter((group) => group.subjects.length > 0)
+  const subjectsToShow = visibleSubjects
+  const groupedSubjects = isSeniorSchool
+    ? ['Core learning areas', 'STEM', 'Social Sciences', 'Arts & Sports Science']
+        .map((group) => ({
+          name: group,
+          subjects: visibleSubjects.filter((subject) => subject.group.toLowerCase() === group.toLowerCase()),
+        }))
+        .filter((group) => group.subjects.length > 0)
+    : [{ name: currentGrade?.stage === '8-4-4' ? `${currentGrade.name} subjects` : `${currentGrade?.stage} learning areas`, subjects: visibleSubjects }]
+        .filter((group) => group.subjects.length > 0)
 
   return (
-    <main className="subjects-page">
+    <main className={`subjects-page${['grade-1', 'grade-2', 'grade-3'].includes(selectedGrade) ? ' lower-primary-page' : ''}`}>
       <section className="subjects-page-header">
         <span className="eyebrow">YOUR LEARNING JOURNEY</span>
         <h1>Explore your subjects.</h1>
@@ -475,6 +444,7 @@ export default function Subjects() {
           value={selectedGrade}
           onChange={(event) => {
             setSelectedGrade(event.target.value)
+            setSearchParams({ grade: event.target.value })
             setSelectedPathway('all')
             setSearchTerm('')
           }}
@@ -489,7 +459,7 @@ export default function Subjects() {
         <p>{currentGrade?.description}</p>
       </section>
 
-      {selectedGrade === 'grade-10' && (
+      {isSeniorSchool && (
         <section className="subjects-grade-selector">
           <label htmlFor="pathway-select">Explore a pathway</label>
 
@@ -573,7 +543,7 @@ export default function Subjects() {
         )}
       </section>
 
-      {selectedGrade === 'grade-10' && (
+      {isSeniorSchool && (
         <p className="subjects-disclaimer">
           This is a subject catalogue, not a prescribed subject combination.
           Available choices and requirements depend on the official curriculum

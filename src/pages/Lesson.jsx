@@ -151,6 +151,43 @@ const lessons = {
   },
 }
 
+const lowerPrimaryIllustrations = {
+  mathematics: ['🧮', '#FFE28A', '#FFB85C'],
+  'english-activities': ['📚', '#C9E9FF', '#7BC8F6'],
+  kiswahili: ['💬', '#E6D7FF', '#B89AF4'],
+  'environmental-activities': ['🌱', '#D8F3DC', '#8FD19E'],
+  'creative-activities': ['🎨', '#FFE0D1', '#FFAA85'],
+  cre: ['🤝', '#FFF0B8', '#F6C85F'],
+  ire: ['🌙', '#DCE8FF', '#9EB9F5'],
+  hre: ['🪷', '#F9D9ED', '#E99AC8'],
+  'indigenous-languages': ['🪘', '#FFE0B0', '#E9A85D'],
+}
+
+function YoungLearnerIllustration({ subjectName, title }) {
+  const key = decodeURIComponent(subjectName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const [symbol, sky, accent] = lowerPrimaryIllustrations[key] || ['⭐', '#E6E0FF', '#AA94EF']
+
+  return (
+    <figure className="young-lesson-illustration">
+      <svg viewBox="0 0 760 260" role="img" aria-labelledby="lesson-art-title" focusable="false">
+        <title id="lesson-art-title">A colourful {key.replace(/-/g, ' ')} learning picture for {title}</title>
+        <rect width="760" height="260" rx="30" fill={sky} />
+        <circle cx="96" cy="66" r="30" fill="#FFF7C2" />
+        <path d="M0 203 Q150 145 300 204 T600 194 T760 190 V260 H0Z" fill="#B8E8C8" />
+        <path d="M0 225 Q180 190 350 228 T760 215 V260 H0Z" fill="#8FD19E" />
+        <circle cx="640" cy="72" r="15" fill="#fff" opacity=".72" />
+        <circle cx="676" cy="92" r="9" fill="#fff" opacity=".72" />
+        <rect x="302" y="58" width="156" height="150" rx="28" fill={accent} />
+        <text x="380" y="166" textAnchor="middle" fontSize="78" aria-hidden="true">{symbol}</text>
+        <path d="M125 211v-34m0 14-17-16m17 22 17-17" stroke="#438A61" strokeWidth="8" strokeLinecap="round" />
+        <path d="M570 211v-34m0 14-17-16m17 22 17-17" stroke="#438A61" strokeWidth="8" strokeLinecap="round" />
+        <path d="M94 210h62m383 0h62" stroke="#438A61" strokeWidth="7" strokeLinecap="round" />
+      </svg>
+      <figcaption>Look closely, imagine, and explore: {title}</figcaption>
+    </figure>
+  )
+}
+
 function readSavedList(key) {
   try {
     const saved = JSON.parse(localStorage.getItem(key) || '[]')
@@ -232,6 +269,7 @@ export default function Lesson() {
     lessonSlug
   )
   const lesson = lessons[lessonSlug] || savedLesson || curriculumLesson
+  const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
 
   if (!lesson) {
     return (
@@ -270,7 +308,7 @@ export default function Lesson() {
   }
 
   return (
-    <main className="lesson-page">
+    <main className={`lesson-page${isLowerPrimary ? ' young-learner-page' : ''}`}>
       <nav className="detail-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Home</Link>
         <span>/</span>
@@ -300,6 +338,11 @@ export default function Lesson() {
 
             <h1>{lesson.title}</h1>
             <p>{lesson.topic}</p>
+            {isLowerPrimary && (
+              <p className="young-learner-prompt">
+                ★ Young explorer challenge: learn, try the activity, and tell someone what you discovered!
+              </p>
+            )}
 
             <div className="lesson-meta">
               <span>
@@ -350,6 +393,10 @@ export default function Lesson() {
               ))}
             </ul>
           </section>
+
+          {isLowerPrimary && (
+            <YoungLearnerIllustration subjectName={subjectName} title={lesson.title} />
+          )}
 
           {lesson.sections.map((section) => (
             <section

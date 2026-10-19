@@ -4,7 +4,7 @@
 :root {
   font-family: 'DM Sans', sans-serif;
   color: #27313D;
-  background: #F7F8FA;
+  background: #E9EEF3;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -13,9 +13,12 @@
   --navy: #19324D;
   --blue: #315B8A;
   --gold: #F0B83D;
-  --background: #F7F8FA;
+  --teal: #087E8B;
+  --teal-bright: #8DE1E5;
+  --teal-soft: #E4F4F4;
+  --background: #E9EEF3;
   --slate: #27313D;
-  --white: #FFFFFF;
+  --white: #F6F8FA;
   --muted: #667384;
   --border: #E5E9EF;
 }
