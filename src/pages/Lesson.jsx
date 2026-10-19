@@ -1,7 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { readTeacherLessons } from '../teacherContent'
-import { createCurriculumLesson } from '../curriculumLesson'
+import {
+  createCurriculumLesson,
+  getCurriculumLessonSequence,
+} from '../curriculumLesson'
 import '../App.css'
 
 function LessonIcon({ name, size = 16 }) {
@@ -151,39 +154,243 @@ const lessons = {
   },
 }
 
-const lowerPrimaryIllustrations = {
-  mathematics: ['🧮', '#FFE28A', '#FFB85C'],
-  'english-activities': ['📚', '#C9E9FF', '#7BC8F6'],
-  kiswahili: ['💬', '#E6D7FF', '#B89AF4'],
-  'environmental-activities': ['🌱', '#D8F3DC', '#8FD19E'],
-  'creative-activities': ['🎨', '#FFE0D1', '#FFAA85'],
-  cre: ['🤝', '#FFF0B8', '#F6C85F'],
-  ire: ['🌙', '#DCE8FF', '#9EB9F5'],
-  hre: ['🪷', '#F9D9ED', '#E99AC8'],
-  'indigenous-languages': ['🪘', '#FFE0B0', '#E9A85D'],
+const picturePrompts = [
+  ['Look closely', 'Find something like this around you.'],
+  ['Try it yourself', 'Use what you have learned in a quick activity.'],
+  ['Tell someone', 'Explain what you noticed in your own words.'],
+]
+
+function getPictureTheme(subjectName) {
+  const key = decodeURIComponent(subjectName || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+
+  if (/math/.test(key)) return 'math'
+  if (/english|language|kiswahili|arabic|french|german|mandarin/.test(key)) {
+    return 'language'
+  }
+  if (/environment|science|agriculture|biology|nature/.test(key)) return 'nature'
+  if (/creative|art|music|sport|physical/.test(key)) return 'creative'
+  return 'community'
+}
+
+function PictureArtwork({ theme, variant, title }) {
+  const titleId = `picture-title-${theme}-${variant}-${title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')}`
+  const backgrounds = ['#FFF0B8', '#DDF4F4', '#E9E2FF']
+
+  return (
+    <svg
+      className={`picture-artwork picture-artwork-${theme}`}
+      viewBox="0 0 240 150"
+      role="img"
+      aria-labelledby={titleId}
+      focusable="false"
+    >
+      <title id={titleId}>{title}</title>
+      <rect width="240" height="150" rx="18" fill={backgrounds[variant]} />
+      <circle cx="207" cy="28" r="12" fill="#FFFFFF" opacity=".75" />
+      <path
+        d="M0 119Q55 98 110 119T240 115V150H0Z"
+        fill={variant === 1 ? '#BDE8D0' : '#C7E9D6'}
+      />
+      {theme === 'math' && variant === 0 && (
+        <>
+          <rect x="61" y="39" width="118" height="75" rx="14" fill="#FFFFFF" />
+          <circle cx="92" cy="67" r="13" fill="#FF9A76" />
+          <circle cx="129" cy="67" r="13" fill="#6EC6CE" />
+          <circle cx="166" cy="67" r="13" fill="#FFD45D" />
+          <path d="M84 92h92" stroke="#596B88" strokeWidth="6" strokeLinecap="round" />
+        </>
+      )}
+      {theme === 'math' && variant === 1 && (
+        <>
+          <path d="M48 82h145" stroke="#8E6CC7" strokeWidth="6" strokeLinecap="round" />
+          {[65, 101, 137, 173].map((x, index) => (
+            <g key={x}>
+              <path d={`M${x} 53v58`} stroke="#8E6CC7" strokeWidth="3" />
+              <circle cx={x} cy={index % 2 ? 73 : 91} r="11" fill={['#FF9A76', '#6EC6CE', '#FFD45D', '#9AD67D'][index]} />
+            </g>
+          ))}
+        </>
+      )}
+      {theme === 'math' && variant === 2 && (
+        <>
+          <circle cx="88" cy="77" r="31" fill="#FF9A76" />
+          <rect x="127" y="47" width="60" height="60" rx="8" fill="#6EC6CE" />
+          <path d="m111 109 28-49 28 49Z" fill="#FFD45D" stroke="#FFFFFF" strokeWidth="5" strokeLinejoin="round" />
+        </>
+      )}
+      {theme === 'language' && variant === 0 && (
+        <>
+          <path d="M49 49q35-19 71 0v60q-36-19-71 0Zm71 0q35-19 71 0v60q-36-19-71 0Z" fill="#FFFFFF" stroke="#7761B5" strokeWidth="5" strokeLinejoin="round" />
+          <path d="M65 69h36m-36 15h27m25-15h37m-37 15h29" stroke="#6EC6CE" strokeWidth="5" strokeLinecap="round" />
+        </>
+      )}
+      {theme === 'language' && variant === 1 && (
+        <>
+          {['A', 'B', 'C'].map((letter, index) => (
+            <g key={letter}>
+              <rect x={44 + index * 58} y="48" width="48" height="58" rx="10" fill={['#FF9A76', '#FFD45D', '#8EC9F2'][index]} />
+              <text x={68 + index * 58} y="88" textAnchor="middle" fill="#34445D" fontSize="30" fontWeight="800">{letter}</text>
+            </g>
+          ))}
+          <path d="m194 52 17 9-17 9Z" fill="#8E6CC7" />
+        </>
+      )}
+      {theme === 'language' && variant === 2 && (
+        <>
+          <path d="M45 49h89a15 15 0 0 1 15 15v21a15 15 0 0 1-15 15h-34l-20 17v-17H45a15 15 0 0 1-15-15V64a15 15 0 0 1 15-15Z" fill="#FFFFFF" />
+          <path d="M120 48h69a14 14 0 0 1 14 14v12a14 14 0 0 1-14 14h-8v15l-18-15h-43" fill="#FFD45D" />
+          <circle cx="60" cy="76" r="5" fill="#8E6CC7" />
+          <circle cx="82" cy="76" r="5" fill="#8E6CC7" />
+          <circle cx="104" cy="76" r="5" fill="#8E6CC7" />
+        </>
+      )}
+      {theme === 'nature' && (
+        <>
+          <circle cx="73" cy="49" r="22" fill="#FFD45D" />
+          <path d="M119 111V65" stroke="#8D633D" strokeWidth="12" strokeLinecap="round" />
+          <circle cx="119" cy="58" r="31" fill={variant === 1 ? '#6EC6CE' : '#83CC83'} />
+          <circle cx="97" cy="75" r="20" fill="#9AD67D" />
+          <circle cx="143" cy="75" r="20" fill="#69B978" />
+          <path d="M91 112h57l-8 20H99Z" fill="#E98A61" />
+          <path d="M119 131v-17m0-5-12-10m12 15 12-13" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" />
+        </>
+      )}
+      {theme === 'creative' && (
+        <>
+          <path d="M66 111c-22-10-27-37-12-55 19-24 60-24 83-5 19 16 22 42 7 59-10 12-21 12-33 5-11-6-29 4-45-4Z" fill="#FFFFFF" />
+          <circle cx="75" cy="68" r="8" fill="#FF8178" />
+          <circle cx="101" cy="55" r="8" fill="#FFD45D" />
+          <circle cx="128" cy="65" r="8" fill="#6EC6CE" />
+          <circle cx="135" cy="89" r="8" fill="#8E6CC7" />
+          <path d="m153 44 42 48-12 11-42-48Z" fill="#E98A61" />
+          <path d="m141 55 12-11 8 9-12 11Z" fill="#34445D" />
+        </>
+      )}
+      {theme === 'community' && (
+        <>
+          <circle cx="86" cy="58" r="20" fill="#8B5E4A" />
+          <circle cx="151" cy="58" r="20" fill="#A86E50" />
+          <path d="M50 113c3-25 15-37 36-37s33 12 36 37Zm65 0c3-25 15-37 36-37s33 12 36 37Z" fill="#6EC6CE" />
+          <path d="M103 91q16 15 31 0" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+          <path d="M92 119h54" stroke="#8E6CC7" strokeWidth="7" strokeLinecap="round" />
+        </>
+      )}
+    </svg>
+  )
 }
 
 function YoungLearnerIllustration({ subjectName, title }) {
-  const key = decodeURIComponent(subjectName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const [symbol, sky, accent] = lowerPrimaryIllustrations[key] || ['⭐', '#E6E0FF', '#AA94EF']
+  const theme = getPictureTheme(subjectName)
 
   return (
     <figure className="young-lesson-illustration">
-      <svg viewBox="0 0 760 260" role="img" aria-labelledby="lesson-art-title" focusable="false">
-        <title id="lesson-art-title">A colourful {key.replace(/-/g, ' ')} learning picture for {title}</title>
-        <rect width="760" height="260" rx="30" fill={sky} />
-        <circle cx="96" cy="66" r="30" fill="#FFF7C2" />
-        <path d="M0 203 Q150 145 300 204 T600 194 T760 190 V260 H0Z" fill="#B8E8C8" />
-        <path d="M0 225 Q180 190 350 228 T760 215 V260 H0Z" fill="#8FD19E" />
-        <circle cx="640" cy="72" r="15" fill="#fff" opacity=".72" />
-        <circle cx="676" cy="92" r="9" fill="#fff" opacity=".72" />
-        <rect x="302" y="58" width="156" height="150" rx="28" fill={accent} />
-        <text x="380" y="166" textAnchor="middle" fontSize="78" aria-hidden="true">{symbol}</text>
-        <path d="M125 211v-34m0 14-17-16m17 22 17-17" stroke="#438A61" strokeWidth="8" strokeLinecap="round" />
-        <path d="M570 211v-34m0 14-17-16m17 22 17-17" stroke="#438A61" strokeWidth="8" strokeLinecap="round" />
-        <path d="M94 210h62m383 0h62" stroke="#438A61" strokeWidth="7" strokeLinecap="round" />
-      </svg>
-      <figcaption>Look closely, imagine, and explore: {title}</figcaption>
+      <PictureArtwork
+        theme={theme}
+        variant={0}
+        title={`${title}: a colourful ${theme} learning picture`}
+      />
+      <figcaption>A picture to help you explore {title}</figcaption>
+    </figure>
+  )
+}
+
+function LearningPictureGallery({ subjectName, title }) {
+  const theme = getPictureTheme(subjectName)
+
+  return (
+    <section className="learning-picture-gallery" aria-label="Picture activities">
+      {picturePrompts.map(([heading, prompt], index) => (
+        <figure className="learning-picture-card" key={heading}>
+          <PictureArtwork
+            theme={theme}
+            variant={index}
+            title={`${heading}: ${title}`}
+          />
+          <figcaption>
+            <strong>{heading}</strong>
+            <span>{prompt}</span>
+          </figcaption>
+        </figure>
+      ))}
+    </section>
+  )
+}
+
+function CountObject({ object, index }) {
+  const color = ['#EF765F', '#F2B94B', '#63A979', '#6C9FD1'][index % 4]
+
+  return (
+    <svg
+      className={`count-object count-object-${object.split(' ')[0]}`}
+      viewBox="0 0 32 32"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {object.includes('stick') ? (
+        <path d="M16 4 19 28" stroke="#A66D3F" strokeWidth="5" strokeLinecap="round" />
+      ) : object.includes('pencil') ? (
+        <>
+          <path d="M11 6h10v19H11z" fill={color} />
+          <path d="m11 25 5 5 5-5" fill="#F1D2A4" />
+          <path d="M13 9h6" stroke="#fff" strokeWidth="2" />
+        </>
+      ) : object.includes('bean') ? (
+        <ellipse cx="16" cy="16" rx="8" ry="12" transform="rotate(-35 16 16)" fill={color} />
+      ) : object.includes('bottle') ? (
+        <>
+          <circle cx="16" cy="17" r="10" fill={color} />
+          <circle cx="16" cy="17" r="6" fill="none" stroke="#fff" strokeWidth="2" />
+          <path d="M12 5h8v4h-8z" fill="#527CA8" />
+        </>
+      ) : (
+        <>
+          <path d="M16 10c-8-8-15 1-10 11 2 5 8 8 10 3 2 5 8 2 10-3 5-10-2-19-10-11Z" fill={color} />
+          <path d="M16 10c0-4 3-6 7-6" fill="none" stroke="#79543B" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M19 7c3-4 7-2 7-2-1 4-4 5-7 2Z" fill="#5E9C5B" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+function CountPicture({ visual }) {
+  const objectName = (quantity) => {
+    if (quantity !== 1) return visual.object
+    return {
+      beans: 'bean',
+      guavas: 'guava',
+      mangoes: 'mango',
+      oranges: 'orange',
+      pencils: 'pencil',
+      sticks: 'stick',
+      'bottle tops': 'bottle top',
+    }[visual.object] || visual.object
+  }
+  const label = visual.groups
+    .map((quantity) => `${quantity} ${objectName(quantity)}`)
+    .join(` ${visual.operator} `)
+
+  return (
+    <figure className="count-picture" aria-label={`Countable picture: ${label}`}>
+      {visual.groups.map((quantity, groupIndex) => (
+        <div className="count-picture-part" key={`${quantity}-${groupIndex}`}>
+          {groupIndex > 0 && (
+            <span className="count-picture-operator" aria-hidden="true">{visual.operator}</span>
+          )}
+          <div className="count-picture-group">
+            <div className="count-picture-items" aria-hidden="true">
+              {Array.from({ length: quantity }, (_, index) => (
+                <CountObject object={visual.object} index={index} key={index} />
+              ))}
+            </div>
+            <span>{quantity} {objectName(quantity)}</span>
+          </div>
+        </div>
+      ))}
     </figure>
   )
 }
@@ -197,7 +404,7 @@ function readSavedList(key) {
   }
 }
 
-export default function Lesson() {
+function LessonContent() {
   const { gradeId, subjectName, lessonSlug } = useParams()
 
   const [answers, setAnswers] = useState({})
@@ -269,7 +476,7 @@ export default function Lesson() {
     lessonSlug
   )
   const lesson = lessons[lessonSlug] || savedLesson || curriculumLesson
-  const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
+  const isPrimaryLearningPage = ['grade-1', 'grade-2', 'grade-3', 'grade-4'].includes(gradeId)
 
   if (!lesson) {
     return (
@@ -296,6 +503,28 @@ export default function Lesson() {
     (question, index) => answers[index] === question.answer
   ).length
   const answeredCount = Object.keys(answers).length
+  const subjectKey = decodeURIComponent(subjectName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+  const authoredLessonSequence = readTeacherLessons()
+    .filter((item) =>
+      item.status === 'published' &&
+      item.gradeId === gradeId &&
+      item.subject.toLowerCase().replace(/[^a-z0-9]+/g, '') === subjectKey
+    )
+    .map((item) => ({ title: item.title, slug: item.id }))
+  const lessonSequence = [
+    ...getCurriculumLessonSequence(gradeId, subjectName),
+    ...authoredLessonSequence,
+  ].filter(
+    (item, index, sequence) =>
+      sequence.findIndex((candidate) => candidate.slug === item.slug) === index
+  )
+  const currentLessonIndex = lessonSequence.findIndex(
+    (item) => item.slug === lessonSlug
+  )
+  const nextLesson = lessonSequence[currentLessonIndex + 1]
+  const subjectPath = `/subjects/${gradeId}/${subjectName}`
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -308,7 +537,7 @@ export default function Lesson() {
   }
 
   return (
-    <main className={`lesson-page${isLowerPrimary ? ' young-learner-page' : ''}`}>
+    <main className={`lesson-page${isPrimaryLearningPage ? ' young-learner-page' : ''}`}>
       <nav className="detail-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Home</Link>
         <span>/</span>
@@ -338,9 +567,9 @@ export default function Lesson() {
 
             <h1>{lesson.title}</h1>
             <p>{lesson.topic}</p>
-            {isLowerPrimary && (
+            {isPrimaryLearningPage && (
               <p className="young-learner-prompt">
-                ★ Young explorer challenge: learn, try the activity, and tell someone what you discovered!
+                Young explorer challenge: learn, try the activity, and tell someone what you discovered.
               </p>
             )}
 
@@ -394,8 +623,11 @@ export default function Lesson() {
             </ul>
           </section>
 
-          {isLowerPrimary && (
-            <YoungLearnerIllustration subjectName={subjectName} title={lesson.title} />
+          {isPrimaryLearningPage && (
+            <>
+              <YoungLearnerIllustration subjectName={subjectName} title={lesson.title} />
+              <LearningPictureGallery subjectName={subjectName} title={lesson.title} />
+            </>
           )}
 
           {lesson.sections.map((section) => (
@@ -481,28 +713,35 @@ export default function Lesson() {
                       {index + 1}. {question.question}
                     </legend>
 
-                    {question.options.map((option) => (
-                      <label
-                        className="practice-option"
-                        key={option}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${index}`}
-                          value={option}
-                          checked={answers[index] === option}
-                          disabled={submitted}
-                          onChange={() =>
-                            setAnswers((previous) => ({
-                              ...previous,
-                              [index]: option,
-                            }))
-                          }
-                          required
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
+                    <div className="practice-question-content">
+                      <div className="practice-question-options">
+                        {question.options.map((option) => (
+                          <label
+                            className="practice-option"
+                            key={option}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${index}`}
+                              value={option}
+                              checked={answers[index] === option}
+                              disabled={submitted}
+                              onChange={() =>
+                                setAnswers((previous) => ({
+                                  ...previous,
+                                  [index]: option,
+                                }))
+                              }
+                              required
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {question.countVisual && (
+                        <CountPicture visual={question.countVisual} />
+                      )}
+                    </div>
 
                     {submitted && (
                       <div
@@ -577,11 +816,21 @@ export default function Lesson() {
 
           <div className="lesson-footer-navigation">
             <Link
-              to={`/subjects/${gradeId}/${subjectName}`}
+              to={subjectPath}
               className="secondary-button"
             >
               <LessonIcon name="arrowLeft" />
               Back to topics
+            </Link>
+            <Link
+              to={nextLesson
+                ? `${subjectPath}/lessons/${nextLesson.slug}`
+                : subjectPath}
+              className="primary-button"
+              aria-label={nextLesson ? `Next lesson: ${nextLesson.title}` : 'Explore more lessons'}
+            >
+              {nextLesson ? `Next lesson: ${nextLesson.title}` : 'Explore more lessons'}
+              <LessonIcon name="arrow" />
             </Link>
           </div>
         </article>
@@ -620,5 +869,13 @@ export default function Lesson() {
         </aside>
       </div>
     </main>
+  )
+}
+
+export default function Lesson() {
+  const { gradeId, subjectName, lessonSlug } = useParams()
+
+  return (
+    <LessonContent key={`${gradeId}/${subjectName}/${lessonSlug}`} />
   )
 }

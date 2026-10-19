@@ -154,7 +154,7 @@ const strandLessons = (subjectSlug) => (strandTopics[subjectSlug] || []).map(([t
   subject: extraAreaNames[subjectSlug],
 }))
 
-function makeExtraTopics(subjectSlug, gradeNumber) {
+function makeExtraTopics(subjectSlug) {
   const subject = extraAreaNames[subjectSlug] || subjectSlug.replace(/-/g, ' ')
   return [
     { title: 'Stories and Good Choices', focus: `Listen to an age-appropriate ${subject} story. Name a kind or wise choice in it.`, activity: 'Draw a story moment and tell a friend what the character learned.', question: 'What can a story help us think about?', options: ['Choices and lessons', 'Only shoe sizes', 'The weather next year', 'A shopping list'], answer: 'Choices and lessons' },
@@ -192,8 +192,410 @@ export function getLowerPrimaryTopics(subjectSlug, gradeId) {
     })), ...strandLessons(subjectSlug)]
   }
   if (['cre', 'ire', 'hre', 'indigenous-languages'].includes(subjectSlug)) {
-    return [...makeExtraTopics(subjectSlug, gradeNumber), ...strandLessons(subjectSlug)]
+    return [...makeExtraTopics(subjectSlug), ...strandLessons(subjectSlug)]
   }
+  return null
+}
+
+function numberOptions(answer) {
+  return [...new Set([answer, answer + 1, Math.max(0, answer - 1), answer + 2])]
+    .map(String)
+}
+
+function mathQuestion(question, answer, explanation, countVisual) {
+  return {
+    question,
+    options: numberOptions(answer),
+    answer: String(answer),
+    explanation,
+    ...(countVisual ? { countVisual } : {}),
+  }
+}
+
+function mathChoiceQuestion(question, answer, distractors, explanation) {
+  return {
+    question,
+    options: [answer, ...distractors],
+    answer,
+    explanation,
+  }
+}
+
+function singularCountObject(object) {
+  return {
+    beans: 'bean',
+    guavas: 'guava',
+    mangoes: 'mango',
+    oranges: 'orange',
+    pencils: 'pencil',
+    sticks: 'stick',
+    'bottle tops': 'bottle top',
+  }[object] || object
+}
+
+function makeMathQuiz(gradeNumber, topicId, lessonIndex) {
+  if (gradeNumber === 1 && topicId === 1) {
+    const examples = [
+      { first: 1, second: 3, objects: 'mangoes', other: 'sticks' },
+      { first: 5, second: 2, objects: 'oranges', other: 'beans' },
+      { first: 6, second: 3, objects: 'guavas', other: 'pencils' },
+    ]
+    const { first, second, objects, other } = examples[lessonIndex]
+    const total = first + second
+    return [
+      mathQuestion(
+        `You have ${first} ${singularCountObject(objects)} and a friend gives you ${second} more. How many ${objects} do you have altogether?`,
+        total,
+        `Count on ${second} from ${first}: ${total} ${objects}.`,
+        { object: objects, groups: [first, second], operator: '+' }
+      ),
+      mathQuestion(
+        `Put ${total} ${other} in a group. Take away ${second}. How many ${other} are left?`,
+        total - second,
+        `${total} take away ${second} leaves ${total - second} ${other}.`,
+        { object: other, groups: [total, second], operator: '-' }
+      ),
+      mathQuestion(
+        `There are ${total + 1} ${other}. You use ${first}. How many ${other} are still there?`,
+        second + 1,
+        `${total + 1} take away ${first} leaves ${second + 1} ${other}.`,
+        { object: other, groups: [total + 1, first], operator: '-' }
+      ),
+    ]
+  }
+
+  if (gradeNumber === 1 && topicId === 2) {
+    const examples = [
+      { first: 5, second: 3, objects: 'beans', extra: 2 },
+      { first: 6, second: 2, objects: 'pencils', extra: 3 },
+      { first: 7, second: 4, objects: 'oranges', extra: 1 },
+    ]
+    const { first, second, objects, extra } = examples[lessonIndex]
+    return [
+      mathQuestion(
+        `You have ${first} ${objects}. A friend gives you ${second} more. How many ${objects} do you have?`,
+        first + second,
+        `Add the groups: ${first} + ${second} = ${first + second}.`,
+        { object: objects, groups: [first, second], operator: '+' }
+      ),
+      mathQuestion(
+        `There are ${first + second} ${objects} on a plate. You take ${second} away. How many are left?`,
+        first,
+        `${first + second} take away ${second} leaves ${first}.`,
+        { object: objects, groups: [first + second, second], operator: '-' }
+      ),
+      mathQuestion(
+        `Count ${first} ${objects}, then add ${extra} more. How many ${objects} are there now?`,
+        first + extra,
+        `${first} + ${extra} = ${first + extra} ${objects}.`,
+        { object: objects, groups: [first, extra], operator: '+' }
+      ),
+    ]
+  }
+
+  if (gradeNumber === 1 && topicId === 3) {
+    const questions = [
+      [
+        ['Which shape has 3 straight sides?', 'Triangle', ['Circle', 'Square', 'Rectangle'], 'A triangle has 3 straight sides.'],
+        ['How many corners does a square have?', 4, 'A square has 4 corners.'],
+        ['How many straight sides does a circle have?', 0, 'A circle has no straight sides.'],
+      ],
+      [
+        ['Which shape has 4 equal sides and 4 corners?', 'Square', ['Circle', 'Triangle', 'Rectangle'], 'A square has 4 equal sides and 4 corners.'],
+        ['How many corners does a triangle have?', 3, 'A triangle has 3 corners.'],
+        ['How many straight edges does a round plate have?', 0, 'A round plate has no straight edges.'],
+      ],
+      [
+        ['How many straight sides does a triangle have?', 3, 'A triangle has 3 straight sides.'],
+        ['How many corners does a rectangle have?', 4, 'A rectangle has 4 corners.'],
+        ['Which shape has no corners?', 'Circle', ['Triangle', 'Square', 'Rectangle'], 'A circle has no corners.'],
+      ],
+    ]
+    return questions[lessonIndex].map(([question, answer, ...details]) =>
+      typeof answer === 'number'
+        ? mathQuestion(question, answer, details[0])
+        : mathChoiceQuestion(question, answer, details[0], details[1])
+    )
+  }
+
+  if (gradeNumber === 2 && topicId === 1) {
+    const examples = [
+      { tens: 3, ones: 4 },
+      { tens: 4, ones: 2 },
+      { tens: 5, ones: 3 },
+    ]
+    const { tens, ones } = examples[lessonIndex]
+    const value = tens * 10 + ones
+    return [
+      mathQuestion(
+        `What number do ${tens} bundles of ten sticks and ${ones} loose sticks make?`,
+        value,
+        `${tens} tens make ${tens * 10}; add ${ones} ones to get ${value}.`
+      ),
+      mathQuestion(
+        `In ${value}, what is the value of the ${tens} in the tens place?`,
+        tens * 10,
+        `The ${tens} is in the tens place, so its value is ${tens * 10}.`
+      ),
+      mathQuestion(
+        `How many loose sticks must you add to ${tens * 10} sticks to make ${value} sticks?`,
+        ones,
+        `${tens * 10} + ${ones} = ${value}.`
+      ),
+    ]
+  }
+
+  if (gradeNumber === 2 && topicId === 2) {
+    const examples = [
+      { first: 24, second: 13, object: 'sticks' },
+      { first: 32, second: 15, object: 'beans' },
+      { first: 41, second: 18, object: 'pencils' },
+    ]
+    const { first, second, object } = examples[lessonIndex]
+    return [
+      mathQuestion(
+        `A class counts ${first} ${object}, then finds ${second} more. How many ${object} are there altogether?`,
+        first + second,
+        `${first} + ${second} = ${first + second} ${object}.`
+      ),
+      mathQuestion(
+        `There are ${first + second} ${object}. ${second} are put away. How many remain?`,
+        first,
+        `${first + second} - ${second} = ${first}.`
+      ),
+      mathQuestion(
+        `After adding ${first} sticks and ${second} sticks, how many groups of ten sticks are in the total?`,
+        Math.floor((first + second) / 10),
+        `${first} + ${second} = ${first + second}, which has ${Math.floor((first + second) / 10)} tens.`
+      ),
+    ]
+  }
+
+  if (gradeNumber === 2 && topicId === 3) {
+    const questions = [
+      [
+        ['What number comes next: 2, 4, 6, ...?', 8, 'The pattern adds 2 each time, so 8 comes next.'],
+        ['A ribbon is 12 cm long. How many centimetres longer is it than an 8 cm ribbon?', 4, '12 - 8 = 4 cm.'],
+        ['How many centimetres are in 1 metre?', 100, '1 metre equals 100 centimetres.'],
+      ],
+      [
+        ['What number comes next: 5, 10, 15, ...?', 20, 'The pattern adds 5 each time, so 20 comes next.'],
+        ['A desk is 60 cm wide and a book is 20 cm wide. What is the difference?', 40, '60 - 20 = 40 cm.'],
+        ['How many centimetres are in half a metre?', 50, 'Half of 100 cm is 50 cm.'],
+      ],
+      [
+        ['What number comes next: 3, 6, 9, ...?', 12, 'The pattern adds 3 each time, so 12 comes next.'],
+        ['A stick is 15 cm long. Another is 10 cm long. What is their total length?', 25, '15 + 10 = 25 cm.'],
+        ['How many centimetres are in 2 metres?', 200, '2 metres equals 200 centimetres.'],
+      ],
+    ]
+    return questions[lessonIndex].map(([question, answer, explanation]) =>
+      mathQuestion(question, answer, explanation)
+    )
+  }
+
+  if (gradeNumber === 3 && topicId === 1) {
+    const examples = [
+      { number: 426, digit: 2, place: 100 },
+      { number: 582, digit: 8, place: 10 },
+      { number: 731, digit: 3, place: 10 },
+    ]
+    const { number, digit, place } = examples[lessonIndex]
+    return [
+      mathQuestion(
+        `In ${number}, what is the value of the digit ${digit}?`,
+        digit * place,
+        `The ${digit} is in the ${place === 100 ? 'hundreds' : 'tens'} place, so its value is ${digit * place}.`
+      ),
+      mathQuestion(
+        `How many hundreds are in ${number}?`,
+        Math.floor(number / 100),
+        `${number} has ${Math.floor(number / 100)} hundreds.`
+      ),
+      mathQuestion(
+        `What number is ${number} rounded to the nearest ten?`,
+        Math.round(number / 10) * 10,
+        `${number} rounds to ${Math.round(number / 10) * 10} to the nearest ten.`
+      ),
+    ]
+  }
+
+  if (gradeNumber === 3 && topicId === 2) {
+    const examples = [
+      { groups: 4, each: 2, object: 'seeds' },
+      { groups: 3, each: 5, object: 'oranges' },
+      { groups: 6, each: 2, object: 'bottle tops' },
+    ]
+    const { groups, each, object } = examples[lessonIndex]
+    return [
+      mathQuestion(
+        `There are ${groups} baskets with ${each} ${object} in each. How many ${object} are there altogether?`,
+        groups * each,
+        `${groups} groups of ${each} make ${groups} × ${each} = ${groups * each}.`
+      ),
+      mathQuestion(
+        `Share ${groups * each} ${object} equally into ${groups} groups. How many go in each group?`,
+        each,
+        `${groups * each} shared into ${groups} equal groups gives ${each} in each.`
+      ),
+      mathQuestion(
+        `If you have ${groups * each} ${object} and put ${each} in each group, how many groups can you make?`,
+        groups,
+        `${groups * each} shared into groups of ${each} makes ${groups} groups.`
+      ),
+    ]
+  }
+
+  if (gradeNumber === 3 && topicId === 3) {
+    const questions = [
+      [
+        ['A chapati is cut into 2 equal pieces. What fraction is one piece?', 'One half', ['One quarter', 'One third', 'One whole'], 'One of 2 equal pieces is one half.'],
+        ['How many minutes are in half an hour?', 30, 'Half of 60 minutes is 30 minutes.'],
+        ['You have 10 shillings and spend 4. How many shillings remain?', 6, '10 - 4 = 6 shillings.'],
+      ],
+      [
+        ['A mango is cut into 4 equal pieces. What fraction is one piece?', 'One quarter', ['One half', 'One third', 'One whole'], 'One of 4 equal pieces is one quarter.'],
+        ['How many minutes are in 1 hour?', 60, '1 hour has 60 minutes.'],
+        ['A pencil costs 15 shillings. How much do 2 pencils cost?', 30, '2 × 15 = 30 shillings.'],
+      ],
+      [
+        ['A watermelon is split into 2 equal parts. What fraction is one part?', 'One half', ['One quarter', 'One third', 'One whole'], 'One of 2 equal parts is one half.'],
+        ['How many minutes are in 2 hours?', 120, '2 × 60 = 120 minutes.'],
+        ['You have 50 shillings and spend 20. How many shillings remain?', 30, '50 - 20 = 30 shillings.'],
+      ],
+    ]
+    return questions[lessonIndex].map(([question, answer, ...details]) =>
+      typeof answer === 'number'
+        ? mathQuestion(question, answer, details[0])
+        : mathChoiceQuestion(question, answer, details[0], details[1])
+    )
+  }
+
+  if (gradeNumber >= 1 && gradeNumber <= 3 && topicId === 'strand-1') {
+    const examples = [
+      { first: gradeNumber + 3 + lessonIndex, second: gradeNumber + 2, fruit: 'mangoes', objects: 'sticks' },
+      { first: gradeNumber * 10 + lessonIndex * 5, second: gradeNumber * 5 + 5, fruit: 'oranges', objects: 'beans' },
+      { first: gradeNumber * 20 + lessonIndex * 10, second: gradeNumber * 10, fruit: 'guavas', objects: 'bottle tops' },
+    ]
+    const { first, second, fruit, objects } = examples[gradeNumber - 1]
+    return [
+      mathQuestion(
+        `You have ${first} ${fruit} and collect ${second} more. How many ${fruit} do you have altogether?`,
+        first + second,
+        `${first} + ${second} = ${first + second} ${fruit}.`
+      ),
+      mathQuestion(
+        `There are ${first + second} ${objects}. You use ${second}. How many ${objects} remain?`,
+        first,
+        `${first + second} - ${second} = ${first} ${objects}.`
+      ),
+      mathQuestion(
+        `A number line shows ${first} steps and then ${second} more steps. What number does it reach?`,
+        first + second,
+        `Count on ${second} from ${first} to reach ${first + second}.`
+      ),
+    ]
+  }
+
+  if (gradeNumber >= 1 && gradeNumber <= 3 && topicId === 'strand-2') {
+    const length = gradeNumber * 10 + lessonIndex * 5
+    const extraLength = gradeNumber * 5 + 5
+    const comparisonLength = length + extraLength
+    const metres = (gradeNumber - 1) * 3 + lessonIndex + 1
+    return [
+      mathQuestion(
+        `A ribbon is ${length} cm long and another is ${extraLength} cm long. What is their total length?`,
+        length + extraLength,
+        `${length} + ${extraLength} = ${length + extraLength} cm.`
+      ),
+      mathQuestion(
+        `A ${comparisonLength} cm string is cut by ${extraLength} cm. How many centimetres are left?`,
+        length,
+        `${comparisonLength} - ${extraLength} = ${length} cm.`
+      ),
+      mathQuestion(
+        `Convert ${metres} metres into centimetres. How many centimetres is that?`,
+        metres * 100,
+        `Each metre is 100 cm, so ${metres} metres is ${metres * 100} cm.`
+      ),
+    ]
+  }
+
+  if (gradeNumber >= 1 && gradeNumber <= 3 && topicId === 'strand-3') {
+    const shapeExamples = [
+      [
+        ['A triangular road sign has how many straight sides?', 3],
+        ['How many corners does a square floor tile have?', 4],
+        ['How many corners does a round plate have?', 0],
+        ['How many sides does a triangle picture have?', 3],
+        ['How many corners does a square window have?', 4],
+        ['How many straight sides does a round clock face have?', 0],
+        ['A samosa is drawn as a triangle. How many straight sides does it have?', 3],
+        ['How many corners does a rectangular card have?', 4],
+        ['How many corners does a circular wheel have?', 0],
+      ],
+      [
+        ['A rectangular door has how many straight sides?', 4],
+        ['How many corners does a triangular flag have?', 3],
+        ['How many corners does a square book cover have?', 4],
+        ['How many straight sides does a triangle on a poster have?', 3],
+        ['A rectangular desk top has how many corners?', 4],
+        ['How many straight sides does a circular lid have?', 0],
+        ['How many corners does a triangular roof drawing have?', 3],
+        ['A square mat has how many straight sides?', 4],
+        ['How many corners does a round bowl have?', 0],
+      ],
+      [
+        ['A square card has how many equal sides?', 4],
+        ['How many corners does a circular clock face have?', 0],
+        ['A rectangular book has how many straight sides?', 4],
+        ['How many sides does a triangle on a map have?', 3],
+        ['How many corners does a rectangle-shaped board have?', 4],
+        ['A round plate has how many corners?', 0],
+        ['How many straight sides does a triangular sign have?', 3],
+        ['How many corners does a square tile have?', 4],
+        ['How many straight sides does a circular coin have?', 0],
+      ],
+    ]
+    const questions = shapeExamples[gradeNumber - 1].slice(lessonIndex * 3, lessonIndex * 3 + 3)
+    return questions.map(([question, answer]) =>
+      mathQuestion(question, answer, `The shape has ${answer} straight sides or corners.`)
+    )
+  }
+
+  if (gradeNumber >= 1 && gradeNumber <= 3 && topicId === 'strand-4') {
+    const fractions = [
+      { parts: 2, fraction: 'One half', food: ['mango', 'mandazi', 'orange'][lessonIndex] },
+      { parts: 3, fraction: 'One third', food: ['watermelon', 'bread roll', 'guava'][lessonIndex] },
+      { parts: 4, fraction: 'One quarter', food: ['cake', 'pineapple', 'pawpaw'][lessonIndex] },
+    ]
+    const { parts, fraction, food } = fractions[gradeNumber - 1]
+    const minutes = 20 + 5 * gradeNumber + 10 * lessonIndex
+    const money = 20 * gradeNumber + 10 * lessonIndex
+    const spent = 5 * gradeNumber + 5
+    const startHour = 7 + gradeNumber
+    const endTime = `${startHour}:${String(minutes).padStart(2, '0')} am`
+    return [
+      mathChoiceQuestion(
+        `A ${food} is cut into ${parts} equal pieces. What fraction is one piece?`,
+        fraction,
+        ['One half', 'One third', 'One quarter'].filter((option) => option !== fraction),
+        `One of ${parts} equal pieces is ${fraction.toLowerCase()}.`
+      ),
+      mathChoiceQuestion(
+        `A class starts at ${startHour}:00 am and lasts ${minutes} minutes. What time does it finish?`,
+        endTime,
+        [`${startHour}:15 am`, `${startHour}:40 am`, `${startHour + 1}:00 am`].filter((option) => option !== endTime),
+        `Adding ${minutes} minutes to ${startHour}:00 am gives ${endTime}.`
+      ),
+      mathQuestion(
+        `You have ${money} shillings and spend ${spent} shillings on fruit. How many shillings remain?`,
+        money - spent,
+        `${money} - ${spent} = ${money - spent} shillings.`
+      ),
+    ]
+  }
+
   return null
 }
 
@@ -204,24 +606,43 @@ export function createLowerPrimaryLesson(gradeId, subjectName, lessonSlug) {
   if (!topic) return null
   const title = topic.lessons.find((item) => slugify(item) === lessonSlug)
   const grade = `Grade ${gradeId.replace('grade-', '')}`
-  const quizQuestions = [
+  const lessonIndex = topic.lessons.indexOf(title)
+  const gradeNumber = Number(gradeId.replace('grade-', ''))
+  const mathQuestions =
+    subjectSlug === 'mathematics'
+      ? makeMathQuiz(gradeNumber, topic.id, lessonIndex)
+      : null
+  const quizQuestions = mathQuestions || [
     {
-      question: topic.question,
+      question:
+        lessonIndex === 0
+          ? topic.question
+          : `${lessonIndex === 1 ? 'While practising' : 'To show what you know about'} ${topic.title.toLowerCase()}, ${topic.question.charAt(0).toLowerCase()}${topic.question.slice(1)}`,
       options: topic.options,
       answer: topic.answer,
-      explanation: `You can use what you learned about ${topic.title.toLowerCase()} to work it out.`,
+      explanation: `Use what you noticed in ${topic.title.toLowerCase()} to work it out.`,
     },
     {
-      question: 'Which is the best way to learn during this activity?',
-      options: ['Try it, notice what happens, and talk about it', 'Hide all the materials', 'Rush without looking', 'Give up before starting'],
-      answer: 'Try it, notice what happens, and talk about it',
-      explanation: 'Trying, observing, and explaining helps young learners remember new ideas.',
+      question: `During “${title},” what should you do with the ${topic.title.toLowerCase()} activity?`,
+      options: [
+        'Try it carefully and describe what you notice',
+        'Skip it without looking',
+        'Hide the materials',
+        'Change to a different subject',
+      ],
+      answer: 'Try it carefully and describe what you notice',
+      explanation: topic.activity,
     },
     {
-      question: `Which learning area are you exploring?`,
-      options: [topic.subject || decodeURIComponent(subjectName).replace(/-/g, ' '), 'A school timetable', 'A lunch box', 'A football score'],
-      answer: topic.subject || decodeURIComponent(subjectName).replace(/-/g, ' '),
-      explanation: 'This lesson belongs to the learning area shown at the top of the page.',
+      question: `After “${title},” what is one way to share something you learned about ${topic.title.toLowerCase()}?`,
+      options: [
+        'Explain or draw one thing you discovered',
+        'Give an answer about a different subject',
+        'Hide your work from everyone',
+        'Copy without understanding',
+      ],
+      answer: 'Explain or draw one thing you discovered',
+      explanation: `Sharing an idea helps you remember what you learned about ${topic.title.toLowerCase()}.`,
     },
   ]
   return {

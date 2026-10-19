@@ -1772,6 +1772,42 @@
   text-align: center;
 }
 
+.learning-picture-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 14px;
+  margin: 0 0 30px;
+}
+
+.learning-picture-card {
+  overflow: hidden;
+  margin: 0;
+  background: #fff;
+  border: 2px solid #e7e5f2;
+  border-radius: 18px;
+  box-shadow: 0 6px 16px rgba(67, 68, 92, 0.07);
+}
+
+.learning-picture-card .picture-artwork {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.learning-picture-card figcaption {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px 15px;
+  color: #49306f;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.learning-picture-card figcaption span {
+  color: var(--slate);
+  font-weight: 400;
+}
+
 .young-learner-page .lesson-section {
   padding: 18px 20px;
   border-left: 4px solid var(--teal);
@@ -1875,6 +1911,67 @@
   color: var(--navy);
   font-weight: 700;
   line-height: 1.6;
+}
+
+.practice-question-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.7fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.practice-question-options {
+  min-width: 0;
+}
+
+.count-picture {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 12px;
+  margin: 8px 0 0;
+  border: 1px solid #D8E7D7;
+  border-radius: 14px;
+  background: #F4FAF1;
+}
+
+.count-picture-part {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.count-picture-group {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: #365B42;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.count-picture-items {
+  display: grid;
+  grid-template-columns: repeat(4, 26px);
+  justify-content: center;
+  gap: 2px;
+}
+
+.count-object {
+  width: 26px;
+  height: 26px;
+}
+
+.count-picture-operator {
+  color: #315B8A;
+  font-size: 1.5rem;
+  font-weight: 800;
 }
 
 .practice-option {
@@ -2133,6 +2230,15 @@
 
   .practice-question {
     padding: 17px 12px;
+  }
+
+  .practice-question-content {
+    grid-template-columns: 1fr;
+  }
+
+  .count-picture {
+    justify-content: flex-start;
+    min-height: 0;
   }
 
   .topic-lesson-link {

@@ -1,5 +1,5 @@
 // Comprehensive Kenyan Senior High Curriculum Data
-// Covers 8-4-4 Form 3 and CBC Grade 10 (Senior School) across all official KICD learning areas
+// Covers 8-4-4 Form 4 and CBC Grade 1-11 across all official KICD learning areas
 import { gradeOptions, getLearningAreas } from '../curriculumLevels.js'
 
 export { gradeOptions }
@@ -2648,14 +2648,6 @@ export const grade10Subjects = [
   },
 ]
 
-// Grade 11 follows the same senior-school learning-area catalogue while
-// presenting its own grade identity in learner and teacher workflows.
-export const grade11Subjects = grade10Subjects.map((subject) => ({
-  ...subject,
-  curriculum: 'grade-11',
-  topics: subject.topics.map((topic) => ({ ...topic, lessons: [...topic.lessons] })),
-}))
-
 // Helper function to look up a subject by grade and slug/name
 export function getSubject(gradeId, subjectSlug) {
   const normalizedSlug = subjectSlug?.toLowerCase().replace(/[^a-z0-9]+/g, '-')
@@ -2673,8 +2665,7 @@ export function getSubjectsByGrade(gradeId) {
   if (['grade-1', 'grade-2', 'grade-3', 'grade-4', 'grade-5', 'grade-6', 'grade-7', 'grade-8', 'grade-9'].includes(gradeId)) {
     return getLearningAreas(gradeId)
   }
-  if (gradeId === 'grade-10') return grade10Subjects
-  if (gradeId === 'grade-11') return grade11Subjects
+  if (['grade-10', 'grade-11'].includes(gradeId)) return grade10Subjects
   if (['form-3', 'form-4'].includes(gradeId)) return form3Subjects
   return []
 }

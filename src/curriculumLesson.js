@@ -1,23 +1,51 @@
-import { form3Subjects, grade10Subjects, grade11Subjects } from './data/curriculumData.js'
+import { getSubjectsByGrade } from './data/curriculumData.js'
 import { getGradeName } from './curriculumLevels.js'
-import { createLowerPrimaryLesson } from './lowerPrimaryContent.js'
-import { createGradeBandLesson } from './gradeBandContent.js'
+import {
+  createLowerPrimaryLesson,
+  getLowerPrimaryTopics,
+} from './lowerPrimaryContent.js'
+import {
+  createGradeBandLesson,
+  getGradeBandTopics,
+} from './gradeBandContent.js'
 
 const toSlug = (value) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+export function getCurriculumLessonSequence(gradeId, subjectName) {
+  const decodedSubject = decodeURIComponent(subjectName)
+  const subjectSlug = toSlug(decodedSubject)
+  const lowerPrimaryTopics = /^grade-[1-3]$/.test(gradeId)
+    ? getLowerPrimaryTopics(subjectSlug, gradeId)
+    : null
+  const gradeBandTopics = /^grade-[4-9]$/.test(gradeId)
+    ? getGradeBandTopics(subjectSlug, gradeId)
+    : null
+  const curriculumSubject = getSubjectsByGrade(gradeId).find(
+    (item) =>
+      item.id === subjectSlug ||
+      item.name.toLowerCase() === decodedSubject.toLowerCase()
+  )
+  const topics =
+    lowerPrimaryTopics ||
+    gradeBandTopics ||
+    curriculumSubject?.topics ||
+    []
+
+  return topics.flatMap((topic) =>
+    topic.lessons.map((title) => ({
+      title,
+      slug: toSlug(title),
+    }))
+  )
+}
 
 export function createCurriculumLesson(gradeId, subjectName, lessonSlug) {
   const lowerPrimaryLesson = createLowerPrimaryLesson(gradeId, subjectName, lessonSlug)
   if (lowerPrimaryLesson) return lowerPrimaryLesson
   const gradeBandLesson = createGradeBandLesson(gradeId, subjectName, lessonSlug)
   if (gradeBandLesson) return gradeBandLesson
-  const subjects = gradeId === 'grade-10'
-    ? grade10Subjects
-    : gradeId === 'grade-11'
-      ? grade11Subjects
-    : gradeId === 'form-3'
-      ? form3Subjects
-      : []
+  const subjects = getSubjectsByGrade(gradeId)
   const subject = subjects.find(
     (item) => item.name.toLowerCase() === decodeURIComponent(subjectName).toLowerCase()
   )
