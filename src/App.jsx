@@ -10,6 +10,7 @@ import Navbar from './pages/Navbar'
 import Dashboard from './pages/Dashboard'
 import Teacher from './pages/Teacher'
 import Contact from './pages/Contact'
+import { contactEmail, contactPhone, whatsappNumber } from './contactInfo'
 import './App.css'
 
 const subjects = [
@@ -101,8 +102,7 @@ function FeatureIcon({ children }) {
 
 function HomePage() {
   return (
-    <div className="app">
-<main>
+    <main>
         <section className="hero" id="home">
           <div className="hero-content">
             <span className="eyebrow">LEARN FROM ANYWHERE</span>
@@ -286,18 +286,74 @@ function HomePage() {
         </section>
       </main>
 
-      <footer className="footer">
-        <Link to="/" className="brand footer-brand">
-          <span className="brand-icon">E</span>
-          <span>
-            Elimu<span className="brand-highlight">Nest</span>
-          </span>
-        </Link>
+  )
+}
 
-        <p>Learn. Practise. Grow.</p>
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-cta">
+        <div>
+          <span className="eyebrow footer-eyebrow">READY TO LEARN?</span>
+          <h2>Study smarter with support that keeps you moving.</h2>
+        </div>
+        <Link to="/subjects" className="footer-cta-button">
+          Explore subjects <span aria-hidden="true">&gt;</span>
+        </Link>
+      </div>
+
+      <div className="site-footer-inner">
+        <div className="site-footer-brand-column">
+          <Link to="/" className="site-footer-brand">
+            <span className="site-footer-brand-icon">E</span>
+            <span>ElimuNest</span>
+          </Link>
+          <p>Clear lessons, helpful practice, and a little more confidence every day.</p>
+        </div>
+
+        <nav className="site-footer-links" aria-label="Footer navigation">
+          <h2>Explore</h2>
+          <Link to="/subjects">Subjects</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/bookmarks">Saved lessons</Link>
+          <Link to="/contact">Contact</Link>
+        </nav>
+
+        <div className="site-footer-contact">
+          <h2>Get in touch</h2>
+          <a href={`tel:${contactPhone}`} className="footer-contact-link">
+            <span className="footer-contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.08 4.18 2 2 0 0 1 5.06 2h3a2 2 0 0 1 2 1.72l.42 2.3a2 2 0 0 1-1.23 2.18l-1.13.45a16 16 0 0 0 8.52 8.52l.45-1.13A2 2 0 0 1 18.98 15l2.3.42A2 2 0 0 1 22 16.92Z" />
+              </svg>
+            </span>
+            <span>{contactPhone}</span>
+          </a>
+          <a href={`mailto:${contactEmail}`} className="footer-contact-link">
+            <span className="footer-contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z" />
+                <path d="m4 7 8 6 8-6" />
+              </svg>
+            </span>
+            <span>{contactEmail}</span>
+          </a>
+          <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" className="footer-contact-link">
+            <span className="footer-contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.05 4.95A9.9 9.9 0 0 0 12.01 2a9.94 9.94 0 0 0-8.62 15.27L2 22l4.82-1.26A9.94 9.94 0 0 0 12.01 22c5.5 0 9.99-4.48 9.99-10a9.9 9.9 0 0 0-2.95-7.05ZM12.01 19.5c-1.46 0-2.9-.39-4.15-1.14l-.3-.18-2.86.75.76-2.79-.19-.29A7.92 7.92 0 0 1 4.1 12c0-4.4 3.59-7.99 8.01-7.99 2.13 0 4.14.83 5.64 2.34a7.95 7.95 0 0 1 2.35 5.65c0 4.4-3.59 7.99-8 7.99Zm4.39-5.96c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.41-1.33-1.65-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.28-.74-1.76-.2-.46-.4-.4-.54-.41-.14-.01-.3-.01-.46-.01-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.03 0 1.2.87 2.35.99 2.52.12.17 1.71 2.6 4.15 3.65.58.25 1.03.4 1.38.51.58.19 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" />
+              </svg>
+            </span>
+            <span>Message us on WhatsApp</span>
+          </a>
+        </div>
+      </div>
+
+      <div className="site-footer-bottom">
         <span>(c) {new Date().getFullYear()} ElimuNest</span>
-      </footer>
-    </div>
+        <span>Learn. Practise. Grow.</span>
+      </div>
+    </footer>
   )
 }
 
@@ -306,9 +362,10 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-      <Navbar />
-
-      <Routes>
+      <div className="site-shell">
+        <Navbar />
+        <div className="site-content">
+          <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/subjects" element={<Subjects />} />
         <Route
@@ -325,7 +382,10 @@ function App() {
         <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/teacher" element={<ProtectedRoute role="teacher"><Teacher /></ProtectedRoute>} />
-      </Routes>
+          </Routes>
+        </div>
+        <SiteFooter />
+      </div>
       </AuthProvider>
     </BrowserRouter>
   )

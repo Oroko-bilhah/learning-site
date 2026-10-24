@@ -3,11 +3,6 @@
   min-height: 100vh;
 }
 
-.app {
-  min-height: 100vh;
-  overflow: hidden;
-}
-
 .navbar {
   width: min(1200px, calc(100% - 64px));
   min-height: 84px;
@@ -748,33 +743,188 @@
   line-height: 1.7;
 }
 
-.footer {
+.site-shell {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.site-content {
+  flex: 1;
+}
+
+.site-footer {
+  padding: 48px max(7%, calc((100% - 1200px) / 2)) 18px;
+  background: #12283d;
+  color: #F6F8FA;
+}
+
+.site-footer-cta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  width: min(1200px, calc(100% - 64px));
-  margin: 0 auto;
-  padding: 25px 0;
-  border-top: 1px solid var(--border);
+  max-width: 1200px;
+  margin: 0 auto 26px;
+  padding: 24px 28px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 2%);
 }
 
-.footer-brand {
-  font-size: 19px;
+.footer-eyebrow {
+  margin-bottom: 10px;
+  color: #7DD3D9;
 }
 
-.footer-brand .brand-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  font-size: 18px;
-}
-
-.footer p,
-.footer > span {
+.site-footer-cta h2 {
   margin: 0;
-  color: var(--muted);
-  font-size: 11px;
+  color: #F6F8FA;
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
+  letter-spacing: -0.04em;
+}
+
+.footer-cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #12283d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(160px, 1fr));
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 38px;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #F6F8FA;
+  font-family: 'Manrope', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.site-footer-brand-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: #F4C95D;
+  color: #12283d;
+}
+
+.site-footer-brand-column p {
+  max-width: 290px;
+  margin: 16px 0 0;
+  color: #C3CFDB;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.site-footer-links,
+.site-footer-contact {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+}
+
+.site-footer h2 {
+  margin: 0 0 5px;
+  color: #F6F8FA;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer-links a,
+.site-footer-contact a {
+  color: #C3CFDB;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  transition: color 0.2s ease;
+}
+
+.site-footer-links a:hover,
+.site-footer-contact a:hover {
+  color: #FFFFFF;
+}
+
+.footer-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 20px;
+}
+
+.footer-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 5%);
+  color: #F6F8FA;
+}
+
+.footer-contact-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.site-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 16px;
+  border-top: 1px solid rgb(246 248 250 / 18%);
+  color: #AEBECD;
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .site-footer {
+    padding: 36px 20px 16px;
+  }
+
+  .site-footer-cta {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 22px 20px;
+  }
+
+  .site-footer-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 20px;
+    padding-bottom: 28px;
+  }
+
+  .site-footer-brand-column {
+    grid-column: 1 / -1;
+  }
+
+  .site-footer-bottom {
+    flex-direction: column;
+    gap: 6px;
+  }
 }
 
 .contact-page {
@@ -1120,16 +1270,6 @@
     gap: 28px;
   }
 
-  .footer {
-    width: calc(100% - 36px);
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .footer p {
-    order: 3;
-    width: 100%;
-  }
 }
 
 .elimu-nav-account {

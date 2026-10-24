@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import '../App.css'
-
-const phoneNumber = '+254746468436'
-const contactEmail = 'lawrencesagini663@gmail.com'
-const whatsappNumber = phoneNumber.replace(/\D/g, '')
+import { contactEmail, contactPhone, whatsappNumber } from '../contactInfo'
 
 export default function Contact() {
   const [name, setName] = useState('')
@@ -45,7 +42,7 @@ export default function Contact() {
           <span className="eyebrow">GET IN TOUCH</span>
           <h2 id="contact-details-title">Talk to our team</h2>
           <p>Reach us by phone or WhatsApp. We'll be glad to hear from you.</p>
-          <a className="contact-number" href={`tel:${phoneNumber}`}>{phoneNumber}</a>
+          <a className="contact-number" href={`tel:${contactPhone}`}>{contactPhone}</a>
           <a className="contact-whatsapp-link" href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer">
             Open WhatsApp <span aria-hidden="true">&gt;</span>
           </a>
