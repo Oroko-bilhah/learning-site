@@ -3234,32 +3234,39 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 24px;
-  padding: 16px 7%;
-  border-bottom: 1px solid #E1E6ED;
-  background: var(--white);
+  gap: 22px;
+  min-height: 78px;
+  padding: 12px clamp(22px, 5vw, 76px);
+  border-bottom: 1px solid rgba(219, 227, 236, .9);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 8px 24px rgba(25, 50, 77, .055);
+  backdrop-filter: blur(14px);
 }
 
 .elimu-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   color: #19324D;
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
 }
 
+.elimu-brand-copy { display: grid; gap: 1px; line-height: 1.15; }
+.elimu-brand-copy small { color: #718094; font-size: .68rem; font-weight: 600; letter-spacing: .035em; }
+
 .elimu-brand-icon {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   place-items: center;
-  border-radius: 10px;
+  border: 2px solid #F0B83D;
+  border-radius: 13px;
   background: #19324D;
   color: #F0B83D;
   font-size: 1.2rem;
@@ -3269,22 +3276,24 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  gap: 4px;
 }
 
 .elimu-nav-links a {
-  padding: 10px 13px;
-  border-radius: 7px;
+  padding: 9px 11px;
+  border-radius: 999px;
   color: #526173;
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
 .elimu-nav-links a:hover {
   background: #F0F3F7;
   color: #19324D;
+  transform: translateY(-1px);
 }
 
 .elimu-nav-links a.active {
@@ -3295,12 +3304,26 @@
 .elimu-nav-links a.elimu-request-link {
   background: #19324D;
   color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(240, 184, 61, .8), 0 4px 10px rgba(25, 50, 77, .15);
 }
 
 .elimu-nav-links a.elimu-request-link:hover,
 .elimu-nav-links a.elimu-request-link.active {
   background: #284967;
   color: #fff;
+}
+
+.elimu-nav-account { gap: 8px; }
+.elimu-signin-link,
+.elimu-signout-button { transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.elimu-signin-link:hover,
+.elimu-signout-button:hover { border-color: #aebbc9; background: #f4f7fa; }
+.elimu-signup-link { transition: background .18s ease, transform .18s ease; }
+.elimu-signup-link:hover { transform: translateY(-1px); }
+
+@media (max-width: 1220px) {
+  .elimu-navbar { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
+  .elimu-nav-links { grid-column: 1 / -1; justify-content: flex-start; }
 }
 
 .teacher-page {
@@ -3751,21 +3774,35 @@
 
 @media (max-width: 700px) {
   .elimu-navbar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 14px;
-    padding: 14px 5%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 12px 5%;
   }
 
   .elimu-nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-    gap: 4px;
+    gap: 5px;
   }
 
   .elimu-nav-links a {
-    padding: 9px 10px;
-    font-size: 0.87rem;
+    padding: 9px 8px;
+    font-size: 0.82rem;
+    text-align: center;
   }
+
+  .elimu-nav-links a.elimu-request-link { grid-column: 1 / -1; }
+  .elimu-nav-account { justify-content: flex-end; gap: 6px; }
+  .elimu-nav-email { max-width: 120px; }
+  .elimu-signin-link,
+  .elimu-signup-link,
+  .elimu-signout-button { padding: 8px 9px; font-size: .8rem; }
+
+  .elimu-brand { font-size: 1.08rem; }
+  .elimu-brand-icon { width: 38px; height: 38px; }
+  .elimu-brand-copy small { font-size: .6rem; }
 
   .teacher-page {
     padding: 30px 5% 60px;

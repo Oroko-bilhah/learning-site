@@ -19,7 +19,10 @@ function Navbar() {
     <header className="elimu-navbar">
       <Link to="/" className="elimu-brand">
         <span className="elimu-brand-icon">E</span>
-        <span>ElimuNest</span>
+        <span className="elimu-brand-copy">
+          <span>ElimuNest</span>
+          <small>Learn. Practise. Grow.</small>
+        </span>
       </Link>
 
       <nav className="elimu-nav-links" aria-label="Main navigation">
