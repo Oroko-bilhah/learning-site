@@ -365,6 +365,9 @@ export default function SubjectDetail() {
           <span>{topicsToShow.length} topics</span>
           <span>{availableLessonSlugs.length} lessons ready</span>
         </div>
+        <Link className="primary-button subject-request-lesson" to={`/request-lesson?gradeId=${encodeURIComponent(gradeId)}&subject=${encodeURIComponent(subject.name)}`}>
+          Request a lesson in {subject.name}
+        </Link>
         <div className="subject-learning-progress">
           <div className="subject-learning-progress-label">
             <span>Your progress</span>
@@ -429,6 +432,9 @@ export default function SubjectDetail() {
 
                 {isExpanded && (
                   <div className="topic-lessons">
+                    <Link className="topic-request-lesson" to={`/request-lesson?gradeId=${encodeURIComponent(gradeId)}&subject=${encodeURIComponent(subject.name)}&topic=${encodeURIComponent(topic.title)}`}>
+                      Request a lesson on {topic.title}
+                    </Link>
                     {topic.lessons.map((lesson, lessonIndex) => (
                       <div className="topic-lesson" key={lesson.slug}>
                         <span className="lesson-number">

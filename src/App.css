@@ -1322,6 +1322,21 @@
 .admin-payment-card dd { margin: 0; overflow-wrap: anywhere; }
 .admin-payment-actions { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
 .subscription-back { margin-top: 24px; }
+.subject-request-lesson { display: inline-flex; margin-top: 18px; text-decoration: none; }
+.topic-request-lesson { display: inline-flex; margin: 6px 0 14px; color: var(--navy); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.lesson-request-page { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 72px; }
+.lesson-request-heading { margin-bottom: 24px; }
+.lesson-request-heading h1 { margin: 8px 0; color: var(--navy); font-size: clamp(2rem, 4vw, 3rem); }
+.lesson-request-heading p,
+.lesson-request-note { color: #596579; line-height: 1.6; }
+.lesson-request-form { display: grid; gap: 10px; padding: 26px; border: 1px solid #e2e7ed; border-radius: 18px; background: #fff; box-shadow: 0 10px 30px #18253b0b; }
+.lesson-request-form label { margin-top: 8px; color: var(--navy); font-weight: 700; }
+.lesson-request-form label span { color: #687386; font-weight: 400; }
+.lesson-request-form input,
+.lesson-request-form select,
+.lesson-request-form textarea { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid #cfd6df; border-radius: 9px; font: inherit; }
+.lesson-request-form textarea { resize: vertical; }
+.lesson-request-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 
 @media (max-width: 760px) {
   .subscription-grid,

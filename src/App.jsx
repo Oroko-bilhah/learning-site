@@ -13,6 +13,7 @@ import Contact from './pages/Contact'
 import { contactEmail, contactPhone, whatsappNumber } from './contactInfo'
 import Subscribe from './pages/Subscribe'
 import SubscriptionAdmin from './pages/SubscriptionAdmin'
+import RequestLesson from './pages/RequestLesson'
 import './App.css'
 
 const subjects = [
@@ -380,6 +381,7 @@ function App() {
         />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/request-lesson" element={<RequestLesson />} />
         <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
         <Route path="/admin/subscriptions" element={<ProtectedRoute role="admin"><SubscriptionAdmin /></ProtectedRoute>} />
         <Route path="/register" element={<AuthPage />} />
