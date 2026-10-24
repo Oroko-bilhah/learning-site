@@ -18,11 +18,7 @@ function Navbar() {
   return (
     <header className="elimu-navbar">
       <Link to="/" className="elimu-brand">
-        <span className="elimu-brand-icon">E</span>
-        <span className="elimu-brand-copy">
-          <span>ElimuNest</span>
-          <small>Learn. Practise. Grow.</small>
-        </span>
+        <img className="elimu-brand-image" src="/elimunest-logo.png" alt="ElimuNest - Learn, Grow, Build Your Future" />
       </Link>
 
       <nav className="elimu-nav-links" aria-label="Main navigation">

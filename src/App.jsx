@@ -312,8 +312,7 @@ function SiteFooter() {
       <div className="site-footer-inner">
         <div className="site-footer-brand-column">
           <Link to="/" className="site-footer-brand">
-            <span className="site-footer-brand-icon">E</span>
-            <span>ElimuNest</span>
+            <img className="site-footer-brand-image" src="/elimunest-logo.png" alt="ElimuNest - Learn, Grow, Build Your Future" />
           </Link>
           <p>Clear lessons, helpful practice, and a little more confidence every day.</p>
         </div>
