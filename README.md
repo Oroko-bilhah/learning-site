@@ -1,4 +1,4 @@
-﻿# ElimuNest
+# ElimuNest
 
 ElimuNest is a Kenyan curriculum learning website built with React and Vite. Learners can browse subjects, work through interactive lessons and quizzes, track completed lessons, and contact the team. Lessons 1-3 are free. Later lessons unlock with an approved subscription.
 
@@ -11,9 +11,7 @@ ElimuNest is a Kenyan curriculum learning website built with React and Vite. Lea
   - KSh 499 for one month.
   - KSh 999 for three months.
   - Learners submit their M-PESA receipt for manual review before access is enabled.
-- Admin payment review at `/admin/subscriptions` for `lawrencesagini663@gmail.com`.
-- Contact email: `lawrencesagini663@gmail.com`.
-- Phone and WhatsApp: `+254746468436`.
+- Admin payment review at `/admin/subscriptions` for the configured administrator account.
 
 ## Tech stack
 
@@ -59,14 +57,14 @@ Run these SQL migrations in order in **Supabase SQL Editor**:
 
 The second migration creates payment request and subscription tables, enables row-level security, restricts published teacher lessons to active subscribers, and gives the administrator role to the named email if its Auth account already exists. If that account is created afterward, rerun the final `UPDATE auth.users` statement from the migration after signup.
 
-After granting the admin role, sign out and sign back in so the refreshed Auth token contains the role. The account email must be `lawrencesagini663@gmail.com` to manage payment requests.
+After granting the admin role, sign out and sign back in so the refreshed Auth token contains the role. Use the administrator account configured in the Supabase migration to manage payment requests.
 
 ## Subscription payments
 
 This project currently uses manual Pochi payment review, not an automated Daraja checkout:
 
 1. A learner signs in and opens **Plans**.
-2. They pay the selected amount to the Pochi La Biashara number `+254746468436` using M-PESA.
+2. They pay the selected amount to the Pochi La Biashara number shown on the subscription page using M-PESA.
 3. They submit the payer phone number and M-PESA receipt code on the site.
 4. An administrator checks the receipt against the Pochi statement and approves or rejects it at `/admin/subscriptions`.
 5. Approval activates or extends the subscription. Paid lesson access is checked by the server and database policies.
