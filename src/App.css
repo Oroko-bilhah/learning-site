@@ -3292,6 +3292,17 @@
   color: #19324D;
 }
 
+.elimu-nav-links a.elimu-request-link {
+  background: #19324D;
+  color: #fff;
+}
+
+.elimu-nav-links a.elimu-request-link:hover,
+.elimu-nav-links a.elimu-request-link.active {
+  background: #284967;
+  color: #fff;
+}
+
 .teacher-page {
   min-height: 75vh;
   padding: 42px 7% 80px;

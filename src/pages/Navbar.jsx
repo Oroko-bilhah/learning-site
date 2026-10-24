@@ -31,6 +31,10 @@ function Navbar() {
           Subjects
         </NavLink>
 
+        <NavLink to="/request-lesson" className="elimu-request-link">
+          Request a teacher
+        </NavLink>
+
         <NavLink to="/contact">
           Contact
         </NavLink>

@@ -126,6 +126,10 @@ function HomePage() {
                 Explore subjects <span>&gt;</span>
               </Link>
 
+              <Link to="/request-lesson" className="secondary-button">
+                Request a teacher <span>&gt;</span>
+              </Link>
+
               <a href="#how-it-works" className="secondary-button">
                 Discover how it works
               </a>
