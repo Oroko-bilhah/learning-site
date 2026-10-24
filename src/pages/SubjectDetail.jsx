@@ -2,8 +2,6 @@ import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { listPublishedLessons } from '../backend'
 import { getGradeName } from '../curriculumLevels'
-import { getLowerPrimaryTopics } from '../lowerPrimaryContent'
-import { getGradeBandTopics } from '../gradeBandContent'
 import { getSubject } from '../data/curriculumData.js'
 import { scopedStorageKey } from '../auth'
 import '../App.css'
@@ -182,25 +180,6 @@ function createLearningArea(subjectSlug, gradeId) {
       ? word.toUpperCase()
       : word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
-  const lowerPrimaryTopics = getLowerPrimaryTopics(normalizedSlug, gradeId)
-  if (lowerPrimaryTopics) {
-    const displayName = ({ cre: 'CRE', ire: 'IRE', hre: 'HRE' })[normalizedSlug] || name
-    return {
-      name: displayName,
-      icon: '✦',
-      description: `${getGradeName(gradeId)} activities to explore, practise, and share your learning.`,
-      topics: lowerPrimaryTopics,
-    }
-  }
-  const gradeBandTopics = getGradeBandTopics(normalizedSlug, gradeId)
-  if (gradeBandTopics) {
-    return {
-      name,
-      icon: '✦',
-      description: `${getGradeName(gradeId)} learning path with practical examples, activities, and skills practice.`,
-      topics: gradeBandTopics,
-    }
-  }
   const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
   const topicsByArea = {
     mathematics: ['Numbers and counting', 'Operations and patterns', 'Shapes and measurement'],
@@ -236,6 +215,7 @@ export default function SubjectDetail() {
   const { gradeId, subjectName } = useParams()
   const [expandedTopic, setExpandedTopic] = useState(1)
   const [teacherLessons, setTeacherLessons] = useState([])
+  const [serverTopics, setServerTopics] = useState(null)
   const [completedLessons, setCompletedLessons] = useState(
     readCompletedLessonSlugs
   )
@@ -258,14 +238,25 @@ export default function SubjectDetail() {
     }
   }, [gradeId])
 
+  useEffect(() => {
+    let active = true
+    const params = new URLSearchParams({ gradeId, subjectName })
+    fetch(`/api/subject-outline?${params}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (active && data?.topics?.length) setServerTopics(data.topics) })
+      .catch(() => {})
+    return () => { active = false }
+  }, [gradeId, subjectName])
+
   const isLowerPrimary = ['grade-1', 'grade-2', 'grade-3'].includes(gradeId)
   const isIntermediateGrade = /^grade-[4-9]$/.test(gradeId)
   const grade10Subject = ['grade-10', 'grade-11'].includes(gradeId)
     ? getSubject(gradeId, subjectName)
     : null
-  const subject = grade10Subject || ((isLowerPrimary || isIntermediateGrade)
+  const baseSubject = grade10Subject || ((isLowerPrimary || isIntermediateGrade)
     ? createLearningArea(subjectName || '', gradeId)
     : subjectContent[subjectName?.toLowerCase()]) || createLearningArea(subjectName || '', gradeId)
+  const subject = serverTopics ? { ...baseSubject, topics: serverTopics } : baseSubject
   const gradeName = getGradeName(gradeId)
 
   if (!subject) {

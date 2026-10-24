@@ -22,9 +22,9 @@ function notifyContentChange() {
   window.dispatchEvent(new Event('elimu-content-change'))
 }
 
-async function dbRequest(table, { query = {}, method = 'GET', body, prefer } = {}) {
+async function dbRequest(table, { query = {}, method = 'GET', body, prefer, select = '*' } = {}) {
   if (!isBackendConfigured) throw new Error('Backend database is not configured. Set the Supabase project URL and publishable key.')
-  const params = new URLSearchParams({ select: '*', ...query })
+  const params = new URLSearchParams({ select, ...query })
   const session = getStoredSession()
   const authorization = session?.access_token
     ? `Bearer ${session.access_token}`
@@ -43,6 +43,69 @@ async function dbRequest(table, { query = {}, method = 'GET', body, prefer } = {
   })
   const payload = response.status === 204 ? null : await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(payload.message || payload.details || payload.hint || 'The database request failed.')
+  return payload
+}
+
+function requireSignedInUser() {
+  const user = getStoredSession()?.user
+  if (!isAuthConfigured || !user?.id) throw new Error('Sign in to manage a subscription.')
+  return user
+}
+
+export async function getMySubscription() {
+  const user = getStoredSession()?.user
+  if (!user?.id || !isBackendConfigured) return null
+  const rows = await dbRequest('subscriptions', { query: { user_id: `eq.${user.id}` } })
+  return rows[0] || null
+}
+
+export async function getMySubscriptionPaymentRequests() {
+  const user = requireSignedInUser()
+  return dbRequest('subscription_payment_requests', {
+    query: { user_id: `eq.${user.id}`, order: 'created_at.desc' },
+  })
+}
+
+export async function createSubscriptionPaymentRequest({ planMonths, amountKes, payerPhone, mpesaReceipt }) {
+  const user = requireSignedInUser()
+  const rows = await dbRequest('subscription_payment_requests', {
+    method: 'POST',
+    body: {
+      user_id: user.id,
+      plan_months: planMonths,
+      amount_kes: amountKes,
+      payer_phone: payerPhone,
+      mpesa_receipt: mpesaReceipt.trim().toUpperCase(),
+    },
+    prefer: 'return=representation',
+  })
+  return rows[0]
+}
+
+export async function listPendingSubscriptionPayments() {
+  const user = requireSignedInUser()
+  if (user.app_metadata?.role !== 'admin') throw new Error('Administrator access is required.')
+  return dbRequest('subscription_payment_requests', {
+    query: { status: 'eq.pending', order: 'created_at.asc' },
+  })
+}
+
+export async function reviewSubscriptionPayment(id, decision, reviewNote = '') {
+  const user = requireSignedInUser()
+  if (user.app_metadata?.role !== 'admin') throw new Error('Administrator access is required.')
+  if (!isBackendConfigured) throw new Error('Supabase is not configured.')
+  const session = getStoredSession()
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/review_subscription_payment`, {
+    method: 'POST',
+    headers: {
+      apikey: apiKey,
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_request_id: id, p_decision: decision, p_review_note: reviewNote }),
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload.message || payload.details || 'Could not review this payment request.')
   return payload
 }
 
@@ -110,8 +173,8 @@ export async function listPublishedLessons(gradeId, subject) {
   if (!isBackendConfigured) return localCollection('elimuNestTeacherLessons').filter((item) => item.status === 'published' && item.gradeId === gradeId && item.subject.toLowerCase() === subject.toLowerCase())
   const query = { status: 'eq.published', grade_id: `eq.${gradeId}`, order: 'updated_at.desc' }
   if (subject) query.subject = `eq.${subject}`
-  const rows = await dbRequest('teacher_lessons', { query })
-  return rows.map((row) => row.lesson_data)
+  const rows = await dbRequest('teacher_lessons', { query, select: 'id,grade_id,subject,topic,title,status,created_at' })
+  return rows.map((row) => ({ id: row.id, gradeId: row.grade_id, subject: row.subject, topic: row.topic, title: row.title, status: row.status, createdAt: row.created_at }))
 }
 
 export async function listClassSchedules() {

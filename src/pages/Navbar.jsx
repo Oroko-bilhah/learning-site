@@ -35,12 +35,20 @@ function Navbar() {
           Contact
         </NavLink>
 
+        <NavLink to="/subscribe">
+          Plans
+        </NavLink>
+
         <NavLink to="/dashboard">
           Dashboard
         </NavLink>
 
         {user?.app_metadata?.role === 'teacher' && <NavLink to="/teacher">
           Teacher
+        </NavLink>}
+
+        {user?.app_metadata?.role === 'admin' && <NavLink to="/admin/subscriptions">
+          Payments
         </NavLink>}
 
         <NavLink to="/bookmarks">
