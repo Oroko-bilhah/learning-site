@@ -777,6 +777,166 @@
   font-size: 11px;
 }
 
+.contact-page {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) 0;
+}
+
+.contact-heading {
+  max-width: 680px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.contact-heading h1,
+.contact-details h2,
+.contact-form h2 {
+  color: var(--navy);
+}
+
+.contact-heading h1 {
+  margin: 12px 0;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  letter-spacing: -0.04em;
+}
+
+.contact-heading p,
+.contact-details > p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.contact-details,
+.contact-form {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: 0 16px 45px rgba(25, 50, 77, 0.06);
+}
+
+.contact-details h2,
+.contact-form h2 {
+  margin: 12px 0;
+  font-size: 1.5rem;
+}
+
+.contact-number,
+.contact-whatsapp-link {
+  display: block;
+  width: fit-content;
+  margin-top: 18px;
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contact-number {
+  font-size: 1.25rem;
+}
+
+.contact-whatsapp-link {
+  color: var(--blue);
+}
+
+.contact-email-link {
+  display: block;
+  width: fit-content;
+  margin-top: 18px;
+  color: var(--blue);
+  overflow-wrap: anywhere;
+}
+
+.contact-form {
+  display: grid;
+  gap: 11px;
+}
+
+.contact-form h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.contact-form label {
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.contact-form label span,
+.contact-form-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--navy);
+  background: var(--white);
+  font: inherit;
+}
+
+.contact-form textarea {
+  resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: var(--blue);
+  outline: 3px solid rgba(49, 91, 138, 0.12);
+}
+
+.contact-form button {
+  justify-self: start;
+  margin-top: 8px;
+  border: 0;
+  cursor: pointer;
+}
+
+.contact-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.contact-form-actions button {
+  margin-top: 0;
+}
+
+.contact-form-note {
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .contact-page {
+    width: calc(100% - 36px);
+    padding: 42px 0;
+  }
+
+  .contact-heading {
+    margin-bottom: 28px;
+  }
+
+  .contact-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 950px) {
   .navbar {
     gap: 18px;

@@ -31,6 +31,10 @@ function Navbar() {
           Subjects
         </NavLink>
 
+        <NavLink to="/contact">
+          Contact
+        </NavLink>
+
         <NavLink to="/dashboard">
           Dashboard
         </NavLink>

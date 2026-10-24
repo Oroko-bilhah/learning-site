@@ -9,6 +9,7 @@ import Bookmarks from './pages/Bookmarks'
 import Navbar from './pages/Navbar'
 import Dashboard from './pages/Dashboard'
 import Teacher from './pages/Teacher'
+import Contact from './pages/Contact'
 import './App.css'
 
 const subjects = [
@@ -319,6 +320,7 @@ function App() {
           element={<Lesson />}
         />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/register" element={<AuthPage />} />
         <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
